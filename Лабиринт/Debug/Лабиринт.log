@@ -1,0 +1,31 @@
+﻿  Source.cpp
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(88): warning C4996: 'kbhit': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _kbhit. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.15063.0\ucrt\conio.h(458): note:  см. объявление "kbhit"
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(237): warning C4554: |: проверьте порядок применения операторов на наличие ошибки; для четкого задания порядка используйте скобки
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(239): warning C4554: |: проверьте порядок применения операторов на наличие ошибки; для четкого задания порядка используйте скобки
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(408): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(407): warning C4101: cbuf: неиспользованная локальная переменная
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(407): warning C4101: put: неиспользованная локальная переменная
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(735): warning C4996: 'kbhit': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _kbhit. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.15063.0\ucrt\conio.h(458): note:  см. объявление "kbhit"
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(737): warning C4996: 'getch': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _getch. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.15063.0\ucrt\conio.h(452): note:  см. объявление "getch"
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(740): warning C4996: 'getch': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _getch. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.15063.0\ucrt\conio.h(452): note:  см. объявление "getch"
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(728): warning C4101: j: неиспользованная локальная переменная
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(728): warning C4101: i: неиспользованная локальная переменная
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(857): warning C4996: 'kbhit': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _kbhit. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.15063.0\ucrt\conio.h(458): note:  см. объявление "kbhit"
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(859): warning C4996: 'getch': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _getch. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.15063.0\ucrt\conio.h(452): note:  см. объявление "getch"
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(862): warning C4996: 'getch': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _getch. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.15063.0\ucrt\conio.h(452): note:  см. объявление "getch"
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(875): warning C4996: 'getche': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _getche. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.15063.0\ucrt\conio.h(455): note:  см. объявление "getche"
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(118): warning C4715: SizeOfMap: значение возвращается не при всех путях выполнения
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(138): warning C4715: zaprosFromMap: значение возвращается не при всех путях выполнения
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(148): warning C4715: zaprosFromMap: значение возвращается не при всех путях выполнения
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(220): warning C4715: nearbyFeel: значение возвращается не при всех путях выполнения
+c:\users\евгений\desktop\версии лабиринтов\лабиринт(25.11.2017)\лабиринт\source.cpp(595): warning C4715: proverka: значение возвращается не при всех путях выполнения
+  Лабиринт.vcxproj -> C:\Users\Евгений\Desktop\Версии лабиринтов\Лабиринт(25.11.2017)\Debug\Лабиринт.exe
+  Лабиринт.vcxproj -> C:\Users\Евгений\Desktop\Версии лабиринтов\Лабиринт(25.11.2017)\Debug\Лабиринт.pdb (Partial PDB)
