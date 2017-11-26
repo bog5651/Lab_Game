@@ -88,30 +88,74 @@ void elps(COORD rect, int rad, RGB gran, RGB zalivka)
 	DeleteObject(hpen1);       // Удаляем созданное перо
 	DeleteObject(hbrush);       // Удаляем созданную кисть
 }
-//об
-void about()
+//вывод текста не работает
+int WriteText(RECT rect, char Text[], ...)
+{
+	va_list argp;
+	int i;
+	char *OutChar;
+	int *OutInt;
+	float *OutFloat;
+	SetBkMode(hdc, TRANSPARENT);
+	va_start(argp, Text);
+	for (i = 0; i < strlen(Text); i++)
+	{
+		if (Text[i] == '%')
+		{
+			if (Text[i + 1] == 'd')
+			{
+				OutInt = va_arg(argp, int*);
+				TextOutA(hdc, rect.top, rect.right, (LPCSTR)OutInt, strlen((char*)OutInt));
+				//DrawTextA(hdc, OutInt, -1, &rect, DT_LEFT);
+			}
+			if (Text[i + 1] == 'f')
+			{
+				OutFloat = va_arg(argp, float*);
+				TextOutA(hdc, rect.top, rect.right, (LPCSTR)OutFloat, strlen((char*)OutFloat));
+				//DrawTextA(hdc, OutFloat, -1, &rect, DT_LEFT);
+			}
+			if ((Text[i + 1] == 's')| (Text[i + 1] == 'c'))
+			{
+				OutChar = va_arg(argp, char*);
+				TextOutA(hdc, rect.top, rect.right, OutChar, strlen(OutChar));
+				//DrawTextA(hdc, OutChar, -1, &rect, DT_LEFT);
+			}
+			i++;
+		}
+		else
+		{
+			TextOutA(hdc, rect.top, rect.right, &Text[i], 2);
+			//DrawTextA(hdc, (LPCSTR)Text[i], -1, &rect, DT_LEFT);
+		}
+	}
+	va_end(argp);
+	return i;
+}
+
+//вывод текста посимвольно
+void WriteTextSymbolBySymbol(RECT Rect,char Text[])
 {
 	int i = 0, time=0;
-	char About[] = { "Привет!*я смотрю ты заинтересовался игрой?*забавно)*А ведь я ее пилил чисто по приколу, лишь бы набраться опыта работы с WinApi*Но как не крути я забил на разработку примерно 5 месяцев и напроч забыл чему научился XD*В общем создал ее Дивольд Евгений Владимирович (bog5651)*Примерно 10.11.2017*Удачи!" };
-	for (i; i < sizeof(About); i++)
+	//char About[] = { "Привет!*я смотрю ты заинтересовался игрой?*забавно)*А ведь я ее пилил чисто по приколу, лишь бы набраться опыта работы с WinApi*Но как не крути я забил на разработку примерно 5 месяцев и напроч забыл чему научился XD*В общем создал ее Дивольд Евгений Владимирович (bog5651)*Примерно 10.11.2017*Удачи!" };
+	for (i; i < strlen(Text); i++)
 	{
 		if (kbhit())
 		{
 			break;
 		}
-		if (About[i] == ',')
+		if (Text[i] == ',')
 		{
 			Sleep(200);
 		}
-		if (About[i] == '*')
+		if (Text[i] == '*')
 		{
 			Sleep(time*50);
-			system("cls");
+			ClearWindow();
 			time = 0;
 			i++;
 		}
 		time++;
-		printf("%c", About[i]);
+		//WriteText(Rect,"fff%c", Text[i]);
 		Sleep(50);
 	}
 	Sleep(200);
@@ -796,8 +840,8 @@ void nummenu(int *poz)
 	{
 		switch (*poz) //смотрим на какой позиции в этом меню
 		{
-		case 1:*poz = 1; DrowGame(); ClearWindow(); status = Game; break; //выполняем то что было на первом пункте и так далее
-		case 2:*poz = 1; about(); break;
+		case 1:*poz = 1; DrowGame(); ClearWindow(); status = Game; feelMap(); break; //выполняем то что было на первом пункте и так далее
+		case 2:*poz = 1; WriteTextSymbolBySymbol({ 0,65,350,0 }, "Привет!*я смотрю ты заинтересовался игрой?*забавно)*А ведь я ее пилил чисто по приколу, лишь бы набраться опыта работы с WinApi*Но как не крути я забил на разработку примерно 5 месяцев и напроч забыл чему научился XD*В общем создал ее Дивольд Евгений Владимирович (bog5651)*Примерно 10.11.2017*Удачи!"); break;
 		case 3:*poz = 1; NumOfMenu = 2; break;
 		case 4:*poz = 1; break;
 		case 5:*poz = 1; exit(NULL); break;//выход из программы(совсем)
@@ -905,10 +949,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 {
 	setlocale(LC_ALL, "RUS");
 	MSG msg;
-	hwnd = CreateWindowExW(0, WC_DIALOG, TEXT("lab"), WS_VISIBLE | WS_SYSMENU, 500, 500, 900, 800, 0, 0, 0, 0);
+	hwnd = CreateWindowExW(0, WC_DIALOG, TEXT("lab"), WS_VISIBLE | WS_SYSMENU, 500, 200, 900, 800, 0, 0, 0, 0);
 	hdc = GetDC(hwnd);
 	SetWindowLong(hwnd, DWL_DLGPROC, (long)mainProc);
-	feelMap();
 	while (GetMessage(&msg, 0, 0, 0) != 0)
 	{
 		TranslateMessage(&msg);
