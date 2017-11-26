@@ -12,6 +12,8 @@ HBRUSH hbrush; //объявляем кисть
 int PunctOf1Menu = 5, PunctOf2Menu = 4, PunctOf3Menu = 0, PunctOf4Menu = 0; // кол-во пунктов в меню и подменю, при необходимости дополнить
 int poz = 1; // позиция в меню
 int NumOfMenu = 1; // начальная страница меню
+enum Status {Menu, Game, Pause};
+Status status = Menu;
 const int izi = 10, normal = 25, hard = 40;
 int labA[izi][izi] = { 1,0,0,0,1,
 					   1,0,1,0,1,
@@ -35,6 +37,13 @@ struct RGB
 };
 struct RGB gan = { 255, 0, 0 }, zal = { 255,255,0 }; // стандартные gan - красный, zal - желтый(от слов граница и заливка)
 
+
+void ClearWindow()
+{
+	RECT r;
+	GetClientRect(hwnd, &r);
+	FillRect(hdc, &r, (HBRUSH)(COLOR_WINDOW + 1));
+}
 // прямоугольник по центру+радиус
 void rect(COORD rect, int rad, RGB gran, RGB zalivka)
 {
@@ -401,7 +410,7 @@ COORD drawCoridor(COORD At, bool permitCollizionCoridors)
 	} while (!sravn(put, End));
 	return End;
 }
-//заполнение карты единицами
+//заполнение карты
 void feelMap()
 {
 	int i, j;
@@ -642,13 +651,13 @@ void drawmap()
 // и 0 если еще не финиш
 bool butgame(char key) 
 {
-	RGB emp = { 0,0,0 }; // черный цвет для закраски "следа" за игрком
+	RGB emp = { 255,255,255 }; // черный цвет для закраски "следа" за игрком
 	int kyda = 0; // под направления 1-вверх 2-вниз 3-лево 4- право 
 	Set_Poz(pozPL);
 	elps(tr, razPL, gan, zal);
 	switch (key)
 	{
-	case 72: //up
+	case 38: //up
 		kyda = 1;
 		if (proverka(kyda))
 		{
@@ -665,7 +674,7 @@ bool butgame(char key)
 			elps(tr, razPL, gan, zal);
 		}
 		break;
-	case 80: //down
+	case 40: //down
 		kyda = 2;
 		if (proverka(kyda))
 		{
@@ -682,7 +691,7 @@ bool butgame(char key)
 			elps(tr, razPL, gan, zal);
 		}
 		break;
-	case 75: //left
+	case 37: //left
 		kyda = 3;
 		if (proverka(kyda))
 		{
@@ -699,7 +708,7 @@ bool butgame(char key)
 			elps(tr, razPL, gan, zal);
 		}
 		break;
-	case 77: //right;
+	case 39: //right;
 		kyda = 4;
 		if (proverka(kyda))
 		{
@@ -718,10 +727,10 @@ bool butgame(char key)
 		break;
 	case 13: drawmap(); break; //enter
 	}
-	if (sravn(pozPL, finish))
+	if (sravn(pozPL, finish)) // проверка на финиширование
 	{
-		printf("yw");
-		return 1;
+		if(MessageBoxW(hwnd, TEXT("YOU WIN\nОК выйти в меню, CANCEL - остаться"), TEXT("YOU WIN"), MB_OKCANCEL)==1) // если нажмет ОК выйти в меню, CANCEL - остаться
+			return 1;
 	}
 	return 0;
 }
@@ -730,36 +739,19 @@ void DrowGame()
 {
 	RGB fin = { 139, 0, 255 }, strt = { 211, 31, 94 }; //цвета заливки для старта и финиша
 	char key = 0;
-	feelMap();
 	Set_Poz(pozPL);
 	elps(tr, razPL, gan, zal);
-	while (true)
-	{
-		if (kbhit())
-		{
-			key = getch();
-			if (key == -32) // дебильные фунциональные клавиши, фун. клавишы дают 2 кода сразу, первый - код фун клавишы, второй - код обычной клавиши
-			{
-				key = getch();
-			}
-			Set_Poz(start);
-			rect(tr, rasmer, gan, strt);
-			Set_Poz(finish);
-			rect(tr, rasmer, gan, fin);
-			if (butgame(key))
-				break;
-		}
-		Sleep(50);
-	}
+	Set_Poz(start);
+	rect(tr, rasmer, gan, strt);
+	Set_Poz(finish);
+	rect(tr, rasmer, gan, fin);
 }
 /*функция отрисовки меню, по кол-ву punkt, enable - выделенный пункт меню, 
 gran - граница пунктов, zalivka - заливка кнопки, 
 далее массивы char для заполнения пунктов меню*/
 void menu(int punkt, int enable, RGB gran, RGB zalivka, ...)
 {
-	RECT r;
-	GetClientRect(hwnd, &r);
-	FillRect(hdc, &r, (HBRUSH)(COLOR_WINDOW + 1));
+	ClearWindow();
 	va_list argp;
 	char *p;
 	int i;
@@ -804,7 +796,7 @@ void nummenu(int *poz)
 	{
 		switch (*poz) //смотрим на какой позиции в этом меню
 		{
-		case 1:*poz = 1; DrowGame(); break; //выполняем то что было на первом пункте и так далее
+		case 1:*poz = 1; DrowGame(); ClearWindow(); status = Game; break; //выполняем то что было на первом пункте и так далее
 		case 2:*poz = 1; about(); break;
 		case 3:*poz = 1; NumOfMenu = 2; break;
 		case 4:*poz = 1; break;
@@ -816,9 +808,9 @@ void nummenu(int *poz)
 	{
 		switch (*poz) //смотрим на какой позиции в этом меню
 		{
-		case 1:*poz = 1; mode = 1; break; //выполняем то что было на первом пункте и так далее
-		case 2:*poz = 1; mode = 2; break;
-		case 3:*poz = 1; mode = 3; break;
+		case 1:*poz = 1; mode = 1; feelMap(); break; //выполняем то что было на первом пункте и так далее
+		case 2:*poz = 1; mode = 2; feelMap(); break;
+		case 3:*poz = 1; mode = 3; feelMap(); break;
 		case 4:*poz = 1; NumOfMenu = 1; break;
 		default: *poz = 1; break;
 		}
@@ -859,18 +851,43 @@ LRESULT WINAPI mainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_PAINT:
 	{
-		DrawMenu(poz);
+		switch (status)
+		{
+		case Menu:
+			{
+				DrawMenu(poz);
+			}break;
+		case Game:
+			{
+				DrowGame();
+			}break;
+		default:
+			break;
+		}
 	} 
 	break;
 	case WM_KEYUP:
 	{
-		char key[] = { (TCHAR)wParam,'\0'};
-		switch (NumOfMenu)
+		char key[] = { (TCHAR)wParam,'\0' };
+		switch (status)
 		{
-		case 1: butMenu(key[0], PunctOf1Menu, &poz); break;
-		case 2: butMenu(key[0], PunctOf2Menu, &poz); break;
-		case 3: butMenu(key[0], PunctOf3Menu, &poz); break;
-		case 4: butMenu(key[0], PunctOf4Menu, &poz); break;
+		case Menu:
+		{
+			switch (NumOfMenu)
+			{
+			case 1: butMenu(key[0], PunctOf1Menu, &poz); break;
+			case 2: butMenu(key[0], PunctOf2Menu, &poz); break;
+			case 3: butMenu(key[0], PunctOf3Menu, &poz); break;
+			case 4: butMenu(key[0], PunctOf4Menu, &poz); break;
+			}
+		}break;
+		case Game:
+		{
+			if (butgame(key[0]))
+				status = Menu;;
+		}break;
+		default:
+			break;
 		}
 		SendMessageW(hwnd, WM_PAINT, NULL, NULL);
 	}
@@ -888,9 +905,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 {
 	setlocale(LC_ALL, "RUS");
 	MSG msg;
-	hwnd = CreateWindowExW(0, WC_DIALOG, TEXT("lab"), WS_VISIBLE | WS_SYSMENU, 500, 500, 900, 500, 0, 0, 0, 0);
+	hwnd = CreateWindowExW(0, WC_DIALOG, TEXT("lab"), WS_VISIBLE | WS_SYSMENU, 500, 500, 900, 800, 0, 0, 0, 0);
 	hdc = GetDC(hwnd);
 	SetWindowLong(hwnd, DWL_DLGPROC, (long)mainProc);
+	feelMap();
 	while (GetMessage(&msg, 0, 0, 0) != 0)
 	{
 		TranslateMessage(&msg);
