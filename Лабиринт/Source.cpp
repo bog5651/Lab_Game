@@ -7,28 +7,69 @@
 HWND hwnd;
 HDC hdc;
 HANDLE hStdOut = FindWindowW(WC_DIALOG, TEXT("lab")); //получаем handle
-HPEN hpen1; //объявляем объект перо
-HGDIOBJ hpenOld, hbrushOld;
-HBRUSH hbrush; //объявляем кисть
+
+//---------Переменные необходимые для меню---------//
 int PunctOf1Menu = 5, PunctOf2Menu = 4, PunctOf3Menu = 0, PunctOf4Menu = 0; // кол-во пунктов в меню и подменю, при необходимости дополнить
 int poz = 1; // позиция в меню
 int NumOfMenu = 1; // начальная страница меню
-enum Status {Menu, Game, Pause};
+
+//---------Перечисляемые типы---------//
+enum direction { Up, Down, Left, Right }; // направления
+enum Status { Menu, Game, Pause }; //статус программы
+enum Music { Step, BackGroungMusicMenu, BackGroungMusicGame, ChoicePointOfMenu }; //перечисление возможной музыки
 Status status = Menu;
-enum Music {Step, BackGroungMusicMenu, BackGroungMusicGame, ChoicePointOfMenu};
-const int izi = 10, normal = 25, hard = 40;
-int labA[izi][izi] = { 1,0,0,0,1,
-					   1,0,1,0,1,
-					   1,1,1,0,0,
-					   1,0,0,0,1,
-					   1,0,1,1,1
-					}; // заполнен в качесвте примера
-int labB[normal][normal] = {};
-int labC[hard][hard] = {};
-int mode = 2; // сложность
+
+//---------Уровни---------//
+short int current_level = 0; // переменная хранящая номер текущего уровня
+int SizeLevels[100] = {}; // матрица хранящая размеры уровней
+const int SizeSmall = 14, SizeMedium = 26, SizeBig = 38; //размерности уровня (3*3*n)+2, где n - любое число, означающее кол-во паттернов
+short int Levels[100][SizeBig][SizeBig]; //трехмерная матрица хранящая все уровни
+short int Pattern[11][3][3] = //набор паттернов для постройки локации
+{ 
+	{1,0,1,
+	 0,0,1,
+	 1,1,1},
+	{1,0,1,
+	 1,0,0,
+	 1,1,1,},
+	{1,1,1,
+	 1,0,0,
+	 1,0,1,},
+	{1,1,1,
+	 0,0,1,
+	 1,0,1,},
+	{1,0,1,
+	 1,0,1,
+	 1,0,1,},
+	{1,1,1,
+	 0,0,0,
+	 1,1,1,},
+	{1,0,1,
+	 1,0,0,
+	 1,0,1,},
+	{1,1,1,
+	 0,0,0,
+	 1,0,1,},
+	{1,0,1,
+	 0,0,1,
+	 1,0,1,},
+	{1,0,1,
+	 0,0,0,
+	 1,1,1,},
+	{1,0,1,
+	 0,0,0,
+	 1,0,1,}
+};
+
+//---------Графика---------//
 int Zume = 20; // маштаб
 int rasmer = 9; // размер стен
 int razPL = 5; //размер круга игрока
+HPEN hpen1; //объявляем объект перо
+HGDIOBJ hpenOld, hbrushOld;
+HBRUSH hbrush; //объявляем кисть
+
+//---------Координаты---------//
 COORD start, finish; //координата старта, финиша
 COORD pozPL = {}; //координата позиции игрока
 COORD tr; //координата на экране. переменная для отрисоки стены и игрока
@@ -42,6 +83,7 @@ struct RGB gan = { 255, 0, 0 }, zal = { 255,255,0 }; // стандартные gan - красны
 class II
 {
 public:
+	COORD pozitionII;
 	COORD LastPozitionPL;
 public:
 	void move()
@@ -76,11 +118,11 @@ void PlayMusic(Music Music)
 	}break;
 	case BackGroungMusicGame:
 	{
-		PlaySound(L"BackGroungMusicGame.wav", 0, SND_ASYNC);
+		//PlaySound(L"BackGroungMusicGame.wav", 0, SND_ASYNC);
 	}break;
 	case BackGroungMusicMenu:
 	{
-		PlaySound(L"BackGroungMusicMenu.wav", 0, SND_ASYNC);
+		//PlaySound(L"BackGroungMusicMenu.wav", 0, SND_ASYNC);
 	}break;
 	case ChoicePointOfMenu:
 	{
@@ -211,60 +253,46 @@ void WriteTextSymbolBySymbol(RECT Rect,char Text[])
 	}
 	Sleep(200);
 }
+
 //возвращает размерность текущей карты
 int SizeOfMap()
 {
-	switch (mode)
-	{
-	case 1: return izi; break;
-	case 2: return normal; break;
-	case 3: return hard; break;
-	}
+	return SizeLevels[current_level];
 }
 
-void writeInMap(COORD r, int i)
+void writeInMap(COORD r, int Level, int value)
 {
-	switch (mode)
-	{
-	case 1: labA[r.Y][r.X] = i; break;
-	case 2: labB[r.Y][r.X] = i; break;
-	case 3: labC[r.Y][r.X] = i; break;
-	}
+	Levels[Level][r.Y][r.X] = value;
 }
 //возвращает содержимое ячейки лабиринта в x,y
-int zaprosFromMap(int x, int y)
+int requestFromMap(int x, int y)
 {
-	switch (mode)
-	{
-	case 1: return labA[y][x]; break;
-	case 2: return labB[y][x]; break;
-	case 3: return labC[y][x]; break;
-	}
+	return Levels[current_level][y][x];
 }
 //возвращает содержимое ячейки лабиринта в x,y
-int zaprosFromMap(COORD zapros)
+int requestFromMap(COORD Pozition)
 {
-	switch (mode)
+	return Levels[current_level][Pozition.Y][Pozition.X];
+	/*switch (mode)
 	{
 	case 1: return labA[zapros.Y][zapros.X]; break;
 	case 2: return labB[zapros.Y][zapros.X]; break;
 	case 3: return labC[zapros.Y][zapros.X]; break;
-	}
+	}*/
 }
 //возвращает 1 если перд poz клеткой слева и справа стены, по направлению kyda
-//1-вверх 2-вниз 3-лево 4- право 
 //и 0 если есть хоть где-то проход
-bool nearbyFeel(COORD poz, int kyda)
+bool nearbyFeel(COORD poz, direction direct)
 {
-	switch (kyda)
+	switch (direct)
 	{
-	case 1:
+	case Up:
 	{
-		if (zaprosFromMap(poz.X + 1, poz.Y) == 1)
+		if (requestFromMap(poz.X + 1, poz.Y) == 1)
 		{
-			if (zaprosFromMap(poz.X - 1, poz.Y) == 1)
+			if (requestFromMap(poz.X - 1, poz.Y) == 1)
 			{
-				if (zaprosFromMap(poz.X, poz.Y - 1) == 1)
+				if (requestFromMap(poz.X, poz.Y - 1) == 1)
 				{
 					return true;
 				}
@@ -275,13 +303,13 @@ bool nearbyFeel(COORD poz, int kyda)
 		else return false;
 	}
 	break;
-	case 2:
+	case Down:
 	{
-		if (zaprosFromMap(poz.X + 1, poz.Y) == 1)
+		if (requestFromMap(poz.X + 1, poz.Y) == 1)
 		{
-			if (zaprosFromMap(poz.X, poz.Y - 1) == 1)
+			if (requestFromMap(poz.X, poz.Y - 1) == 1)
 			{
-				if (zaprosFromMap(poz.X, poz.Y + 1) == 1)
+				if (requestFromMap(poz.X, poz.Y + 1) == 1)
 				{
 					return true;
 				}
@@ -291,13 +319,13 @@ bool nearbyFeel(COORD poz, int kyda)
 		}
 		else return false;
 	} break;
-	case 3:
+	case Left:
 	{
-		if (zaprosFromMap(poz.X + 1, poz.Y) == 1)
+		if (requestFromMap(poz.X + 1, poz.Y) == 1)
 		{
-			if (zaprosFromMap(poz.X - 1, poz.Y) == 1)
+			if (requestFromMap(poz.X - 1, poz.Y) == 1)
 			{
-				if (zaprosFromMap(poz.X, poz.Y + 1) == 1)
+				if (requestFromMap(poz.X, poz.Y + 1) == 1)
 				{
 					return true;
 				}
@@ -307,13 +335,13 @@ bool nearbyFeel(COORD poz, int kyda)
 		}
 		else return false;
 	}break;
-	case 4:
+	case Right:
 	{
-		if (zaprosFromMap(poz.X - 1, poz.Y) == 1)
+		if (requestFromMap(poz.X - 1, poz.Y) == 1)
 		{
-			if (zaprosFromMap(poz.X, poz.Y - 1) == 1)
+			if (requestFromMap(poz.X, poz.Y - 1) == 1)
 			{
-				if (zaprosFromMap(poz.X, poz.Y + 1) == 1)
+				if (requestFromMap(poz.X, poz.Y + 1) == 1)
 				{
 					return true;
 				}
@@ -354,25 +382,23 @@ COORD drawCoridor(COORD At, bool permitCollizionCoridors)
 	int i = 0, j = 0;
 	int maxtry = permitCollizionCoridors ? 50 : 100; //максимальное кол-во попыток написовать лабиринт
 	int tru = 0; //сколько попыток было примененно
-	int kyda = 0; // храним код направления 0-3
+	direction direct; // храним направлениt
 	int buf;
 	bool brk = false, ex = false;
 	COORD put, cbuf, End;//put путь. cbuf буфер для пробного шага. End возвращаемая координата конца коридора
 	End.X = 0;
 	End.Y = 0;
-	pozPL = start;
 	put = At;
 	brk = false;
-	writeInMap(At, 0);
+	writeInMap(At, current_level, 0);
 	do
 	{
 		buf = rand() % 4;
 		switch (buf)
 		{
-		case 0: // рисовать в верх
-		{
-			kyda = 1;
-			if (put.Y - 1 == 1)
+		case 0:
+			direct = Up;
+			if (put.Y - 2 == 1)
 			{
 				tru++;
 				break;
@@ -381,122 +407,124 @@ COORD drawCoridor(COORD At, bool permitCollizionCoridors)
 			{
 				cbuf = put;
 				cbuf.Y--;
-				if (krayKarty(cbuf))
+				/*if (krayKarty(cbuf))
 				{
 					tru++;
 					break;
-				}
-				if ((nearbyFeel(cbuf, kyda))&(!permitCollizionCoridors))
+				}*/
+				if ((nearbyFeel(cbuf, direct))&(!permitCollizionCoridors))
 				{
 					put.Y--;
-					writeInMap(put, 0);
+					writeInMap(put, current_level, 0);
 					tru = 0;
 				}
 				else tru++;
 				if (permitCollizionCoridors)
 				{
 					put.Y--;
-					writeInMap(put, 0);
+					writeInMap(put, current_level, 0);
 					tru++;
 				}
 			}
-		}break;
-		case 1: //вправо
-		{
-			kyda = 2;
-			if (put.X + 1 == SizeOfMap() - 2)
+			break;
+		case 1:
 			{
-				tru++;
-				break;
-			}
-			else
-			{
-				cbuf = put;
-				cbuf.X++;
-				if (krayKarty(cbuf))
+				direct = Down;
+				if (put.Y + 1 == SizeOfMap() - 2)
 				{
 					tru++;
 					break;
 				}
-				if ((nearbyFeel(cbuf, kyda))&(!permitCollizionCoridors))
+				else
 				{
-					put.X++;
-					writeInMap(put, 0);
-					tru = 0;
+					cbuf = put;
+					cbuf.Y++;
+					/*if (krayKarty(cbuf))
+					{
+						tru++;
+						break;
+					}*/
+					if ((nearbyFeel(cbuf, direct))&(!permitCollizionCoridors))
+					{
+						put.Y++;
+						writeInMap(put, current_level, 0);
+						tru = 0;
+					}
+					else tru++;
+					if (permitCollizionCoridors)
+					{
+						put.Y++;
+						writeInMap(put, current_level, 0);
+						tru++;
+					}
 				}
-				else tru++;
-				if (permitCollizionCoridors)
-				{
-					put.X++;
-					writeInMap(put, 0);
-					tru ++;
-				}
-			}
-		}break;
-		case 2: //вниз
-		{
-			kyda = 3;
-			if (put.Y + 1 == SizeOfMap() - 2)
+			}break;
+		case 2:
 			{
-				tru++;
-				break;
-			}
-			else
-			{
-				cbuf = put;
-				cbuf.Y++;
-				if (krayKarty(cbuf))
+				direct = Left;
+				if (put.X - 2 == 1)
 				{
 					tru++;
 					break;
 				}
-				if ((nearbyFeel(cbuf, kyda))&(!permitCollizionCoridors))
+				else
 				{
-					put.Y++;
-					writeInMap(put, 0);
-					tru = 0;
+					cbuf = put;
+					cbuf.X--;
+					/*if (krayKarty(cbuf))
+					{
+						tru++;
+						break;
+					}*/
+					if ((nearbyFeel(cbuf, direct))&(!permitCollizionCoridors))
+					{
+						put.X--;
+						writeInMap(put, current_level, 0);
+						tru = 0;
+					}
+					else tru++;
+					if (permitCollizionCoridors)
+					{
+						put.X--;
+						writeInMap(put, current_level, 0);
+						tru++;
+					}
 				}
-				else tru++;
-				if (permitCollizionCoridors)
-				{
-					put.Y++;
-					writeInMap(put, 0);
-					tru ++;
-				}
-			}
-		}break;
-		case 3: //влево
-		{
-			kyda = 4;
-			if (put.X - 1 == 1)
+			}break;
+		case 3:
 			{
-				tru++;
-				break;
-			}
-			else
-			{
-				cbuf = put;
-				cbuf.X--;
-				if (krayKarty(cbuf))
+				direct = Right;
+				if (put.X + 1 == SizeOfMap() - 2)
 				{
 					tru++;
 					break;
 				}
-				if ((nearbyFeel(cbuf, kyda))&(!permitCollizionCoridors))
+				else
 				{
-					put.X--;
-					writeInMap(put, 0);
-					tru = 0;
+					cbuf = put;
+					cbuf.X++;
+					/*if (krayKarty(cbuf))
+					{
+						tru++;
+						break;
+					}*/
+					if ((nearbyFeel(cbuf, direct))&(!permitCollizionCoridors))
+					{
+						put.X++;
+						writeInMap(put, current_level, 0);
+						tru = 0;
+					}
+					else tru++;
+					if (permitCollizionCoridors)
+					{
+						put.X++;
+						writeInMap(put, current_level, 0);
+						tru++;
+					}
 				}
-				else tru++;
-				if (permitCollizionCoridors)
-				{
-					put.X--;
-					writeInMap(put, 0);
-					tru ++;
-				}
-			}
-		}break;
+			}break;
+		default:
+			break;
 		}
 		if (maxtry <= tru)
 		{
@@ -505,54 +533,120 @@ COORD drawCoridor(COORD At, bool permitCollizionCoridors)
 	} while (!sravn(put, End));
 	return End;
 }
-//заполнение карты
-void feelMap()
+
+void DrawPattern(COORD pozition, int NumberOfPattern)
+{
+	int i, j, PatternI, PatternJ;
+	for (i = pozition.Y, PatternI = 0; i < pozition.Y + 3; i++, PatternI++)
+	{
+		for (j = pozition.X, PatternJ = 0; j < pozition.Y + 3; j++, PatternJ++)
+		{
+			Levels[current_level][i][j] = Pattern[NumberOfPattern][PatternI][PatternJ];
+		}
+	}
+}
+
+void GenerateLocation()
+{
+	int i, j, k;
+	direction direct;
+	COORD positionOFDraw = { 1,1 };
+	int buf = rand() % 2; //выбор размера карты (2 переставить на 3)TODO
+	switch (buf)
+	{
+	case 0:
+		SizeLevels[current_level] = SizeSmall;
+		break;
+	case 1:
+		SizeLevels[current_level] = SizeMedium;
+		break;
+	case 2:
+		SizeLevels[current_level] = SizeBig;
+		break;
+	default:
+		break;
+	}
+	for (i = 0; i < SizeOfMap(); i++) //заполнение Уровня единицами
+	{
+		for (j = 0; j < SizeOfMap(); j++)
+		{
+			Levels[current_level][i][j] = 1;
+		}
+	}
+
+	int PotentialPattern = 4 + rand() % 2;
+	DrawPattern(positionOFDraw, PotentialPattern);//начальный паттерн
+	start = { 2,2 };
+	pozPL = start;
+	do
+	{
+		if (requestFromMap(positionOFDraw.X + 2, positionOFDraw.Y + 1) == 0) //проверка возможности рисовать вправо по паттерну
+		{
+
+		}
+		if (requestFromMap(positionOFDraw.X + 2, positionOFDraw.Y + 1) == 0) //проверка возможности рисовать вправо по паттерну
+		{
+
+		}
+		if (requestFromMap(positionOFDraw.X + 2, positionOFDraw.Y + 1) == 0) //проверка возможности рисовать вправо по паттерну
+		{
+
+		}
+		if (requestFromMap(positionOFDraw.X + 2, positionOFDraw.Y + 1) == 0) //проверка возможности рисовать вправо по паттерну
+		{
+
+		}
+	} while (false);
+}
+
+//заполнение карты не работает
+void GenerateMap()
 {
 	int i, j;
 	int buf;
 	bool brk = false, ex = false;
 	COORD tempForCoridor;
 	srand(time(NULL));
-	// заполнение массива стенами (единицами)
-	for (i = 0; i < hard; i++)
+	buf = rand() % 2; //выбор размера карты (переставить на 3)TODO
+	switch (buf)
 	{
-		for (j = 0; !brk; j++)
+	case 0:
 		{
-			switch (mode)
+			SizeLevels[current_level] = SizeSmall;
+		}break;
+	case 1:
+		{
+			SizeLevels[current_level] = SizeMedium;
+		}break;
+	case 2:
+		{
+			SizeLevels[current_level] = SizeBig;
+		}break;
+	default:
+		break;
+	}
+	for (i = 0; i < SizeOfMap(); i++)
+		{
+			for (j = 0; j < SizeOfMap(); j++)
 			{
-			case 1:
-			{
-				if ((i >= izi) || (j >= izi)) brk = true;
-				else labA[i][j] = 1;
-			} break;
-			case 2:
-			{
-				if ((i >= normal) || (j >= normal)) brk = true;
-				else labB[i][j] = 1;
-			} break;
-			case 3:
-			{
-				if ((i >= hard) || (j >= hard)) brk = true;
-				else labC[i][j] = 1;
-			} break;
+				Levels[current_level][i][j] = 1;
 			}
 		}
-		brk = false;
-	}
 	brk = true;
 	//выбор места старта и финиша
 	buf = rand() % 4; //выбор места старта
 	switch (buf)
 	{
-	case 0: start.Y = 1; start.X = 1 + rand() % (SizeOfMap() - 2); break;
+	case 0: start.Y = 1; start.X = 2 + rand() % (SizeOfMap() - 2); break;
 	case 1: start.X = (SizeOfMap() - 2); start.Y = 1 + rand() % (SizeOfMap() - 2); break;
 	case 2: start.Y = (SizeOfMap() - 2); start.X = 1 + rand() % (SizeOfMap() - 2); break;
-	case 3: start.X = 1; start.Y = 1 + rand() % (SizeOfMap() - 2); break;
+	case 3: start.X = 1; start.Y = 2 + rand() % (SizeOfMap() - 2); break;
 	}
+	pozPL = start;
 	finish = drawCoridor(start,0);
 	for (i = 0; i < SizeOfMap() / 1.5; i++)
 	{
-		buf = rand() % 4; //выбор места старта
+		buf = rand() % 4; //выбор места старта для отрисовки случайных коридоров
 		switch (buf)
 		{
 		case 0: tempForCoridor.Y = 2; tempForCoridor.X = 2 + rand() % (SizeOfMap() - 2); break;
@@ -560,12 +654,11 @@ void feelMap()
 		case 2: tempForCoridor.Y = (SizeOfMap() - 2); tempForCoridor.X = 2 + rand() % (SizeOfMap() - 2); break;
 		case 3: tempForCoridor.X = 2; tempForCoridor.Y = 2 + rand() % (SizeOfMap() - 2); break;
 		}
-		if (zaprosFromMap(tempForCoridor) != 0)
+		if (requestFromMap(tempForCoridor) != 0)
 		{
 			drawCoridor(tempForCoridor, 0);
 		}
 	}
-	printf("%d", i);
 	/*for (i = 0; i<SizeOfMap()/3 ; i++)
 		for (j = 0; j< SizeOfMap()/3; j++)
 		{
@@ -573,13 +666,6 @@ void feelMap()
 			put.Y = 2 + rand() % (SizeOfMap() - 2);
 			writeInMap(put, 0);
 		}*/
-
-	labA[start.Y][start.X];
-	labA[finish.Y][finish.X];
-	labB[start.Y][start.X];
-	labB[finish.Y][finish.X];
-	labC[start.Y][start.X];
-	labC[finish.Y][finish.X];
 }
 //установить в переменную tr по маштабу и смещению для отрисовки на экране
 void Set_Poz(COORD poz)
@@ -591,118 +677,44 @@ void Set_Poz(COORD poz)
 	tr.Y = smesh + (tr.Y*zume);
 }
 //true если в выбранном направлении от позиции игрока(pozPL)
-//1-вверх 2-вниз 3-лево 4- право 
-bool proverka(int kyda)
+bool proverka(direction direct)
 {
-	switch (mode)
+	switch (direct)
 	{
-	case 1:
-	{
-		switch (kyda)
+	case Up:
+		if (Levels[current_level][pozPL.Y - 1][pozPL.X] == 1)
 		{
-		case 1:
-			if (labA[pozPL.Y - 1][pozPL.X] == 1)
-			{
-				return true;
-			}
-			else return false;
-			break;
-		case 2:
-			if ((labA[pozPL.Y + 1][pozPL.X] == 1))
-			{
-				return true;
-			}
-			else return false;
-			break;
-		case 3:
-			if (labA[pozPL.Y][pozPL.X - 1] == 1)
-			{
-				return true;
-			}
-			else return false;
-			break;
-		case 4:
-			if (labA[pozPL.Y][pozPL.X + 1] == 1)
-			{
-				return true;
-			}
-			else return false;
-			break;
+			return true;
 		}
-	}
-	break;
-	case 2: 
-	{
-		switch (kyda)
+		else return false;
+		break;
+	case Down:
+		if ((Levels[current_level][pozPL.Y + 1][pozPL.X] == 1))
 		{
-		case 1:
-			if (labB[pozPL.Y - 1][pozPL.X] == 1)
-			{
-				return true;
-			}
-			else return false;
-			break;
-		case 2:
-			if ((labB[pozPL.Y + 1][pozPL.X] == 1))
-			{
-				return true;
-			}
-			else return false;
-			break;
-		case 3:
-			if (labB[pozPL.Y][pozPL.X - 1] == 1)
-			{
-				return true;
-			}
-			else return false;
-			break;
-		case 4:
-			if (labB[pozPL.Y][pozPL.X + 1] == 1)
-			{
-				return true;
-			}
-			else return false;
-			break;
+			return true;
 		}
-	} break;
-	case 3: 
-	{
-		switch (kyda)
+		else return false;
+		break;
+	case Left:
+		if (Levels[current_level][pozPL.Y][pozPL.X - 1] == 1)
 		{
-		case 1:
-			if (labC[pozPL.Y - 1][pozPL.X] == 1)
-			{
-				return true;
-			}
-			else return false;
-			break;
-		case 2:
-			if ((labC[pozPL.Y + 1][pozPL.X] == 1))
-			{
-				return true;
-			}
-			else return false;
-			break;
-		case 3:
-			if (labC[pozPL.Y][pozPL.X - 1] == 1)
-			{
-				return true;
-			}
-			else return false;
-			break;
-		case 4:
-			if (labC[pozPL.Y][pozPL.X + 1] == 1)
-			{
-				return true;
-			}
-			else return false;
-			break;
+			return true;
 		}
-	} break;
+		else return false;
+		break;
+	case Right:
+		if (Levels[current_level][pozPL.Y][pozPL.X + 1] == 1)
+		{
+			return true;
+		}
+		else return false;
+		break;
+	default:
+		break;
 	}
 }
 //нарисовать всю карту 
-void drawmap()
+void DrawAllCurrentLevel()
 {
 	int i, j;
 	COORD ij;
@@ -712,32 +724,10 @@ void drawmap()
 		{
 			ij.X = i;
 			ij.Y = j;
-			switch (mode)
+			if(Levels[current_level][j][i] == 1)
 			{
-			case 1:
-			{
-				if(labA[j][i] == 1)
-				{
-					Set_Poz(ij);
-					rect(tr, rasmer, gan, zal);
-				}
-			}break;
-			case 2: 
-			{
-				if (labB[j][i] == 1)
-				{
-					Set_Poz(ij);
-					rect(tr, rasmer, gan, zal);
-				}
-			}break;
-			case 3: 
-			{
-				if (labC[j][i] == 1)
-				{
-					Set_Poz(ij);
-					rect(tr, rasmer, gan, zal);
-				}
-			}break;
+				Set_Poz(ij);
+				rect(tr, rasmer, gan, zal);
 			}
 		}
 	}
@@ -747,14 +737,14 @@ void drawmap()
 bool butgame(char key) 
 {
 	RGB emp = { 255,255,255 }; // черный цвет для закраски "следа" за игрком
-	int kyda = 0; // под направления 1-вверх 2-вниз 3-лево 4- право 
+	direction direct = Up; // под направления 1-вверх 2-вниз 3-лево 4- право 
 	Set_Poz(pozPL);
 	elps(tr, razPL, gan, zal);
 	switch (key)
 	{
 	case 38: //up
-		kyda = 1;
-		if (proverka(kyda))
+		direct = Up;
+		if (proverka(direct))
 		{
 			Set_Poz(pozPL);
 			tr.Y -= Zume;
@@ -770,8 +760,8 @@ bool butgame(char key)
 		}
 		break;
 	case 40: //down
-		kyda = 2;
-		if (proverka(kyda))
+		direct = Down;
+		if (proverka(direct))
 		{
 			Set_Poz(pozPL);
 			tr.Y += Zume;
@@ -787,8 +777,8 @@ bool butgame(char key)
 		}
 		break;
 	case 37: //left
-		kyda = 3;
-		if (proverka(kyda))
+		direct = Left;
+		if (proverka(direct))
 		{
 			Set_Poz(pozPL);
 			tr.X -= Zume;
@@ -804,8 +794,8 @@ bool butgame(char key)
 		}
 		break;
 	case 39: //right;
-		kyda = 4;
-		if (proverka(kyda))
+		direct = Right;
+		if (proverka(direct))
 		{
 			Set_Poz(pozPL);
 			tr.X += Zume;
@@ -820,7 +810,7 @@ bool butgame(char key)
 			elps(tr, razPL, gan, zal);
 		}
 		break;
-	case 13: drawmap(); break; //enter
+	case 13: DrawAllCurrentLevel(); break; //enter
 	}
 	if (sravn(pozPL, finish)) // проверка на финиширование
 	{
@@ -835,13 +825,12 @@ void DrowGame()
 	/*std::thread BackGround(PlayMusic, BackGroungMusicGame);
 	BackGround.detach();*/
 	RGB fin = { 139, 0, 255 }, strt = { 211, 31, 94 }; //цвета заливки для старта и финиша
-	char key = 0;
-	Set_Poz(pozPL);
-	elps(tr, razPL, gan, zal);
 	Set_Poz(start);
 	rect(tr, rasmer, gan, strt);
 	Set_Poz(finish);
 	rect(tr, rasmer, gan, fin);
+	Set_Poz(pozPL);
+	elps(tr, razPL, gan, zal);
 }
 /*функция отрисовки меню, по кол-ву punkt, enable - выделенный пункт меню, 
 gran - граница пунктов, zalivka - заливка кнопки, 
@@ -873,7 +862,7 @@ void menu(int punkt, int enable, RGB gran, RGB zalivka, ...)
 	}
 	va_end(argp);
 }
-//Отрисовка меню
+//Вызов Отрисовки меню
 void DrawMenu(int poz)
 {
 	switch (NumOfMenu)
@@ -895,7 +884,7 @@ void nummenu(int *poz)
 	{
 		switch (*poz) //смотрим на какой позиции в этом меню
 		{
-		case 1:*poz = 1; DrowGame(); ClearWindow(); status = Game; feelMap(); break; //выполняем то что было на первом пункте и так далее
+		case 1:*poz = 1; DrowGame(); ClearWindow(); status = Game; GenerateLocation(); break; //выполняем то что было на первом пункте и так далее
 		case 2:*poz = 1; WriteTextSymbolBySymbol({ 0,65,350,0 }, "Привет!*я смотрю ты заинтересовался игрой?*забавно)*А ведь я ее пилил чисто по приколу, лишь бы набраться опыта работы с WinApi*Но как не крути я забил на разработку примерно 5 месяцев и напроч забыл чему научился XD*В общем создал ее Дивольд Евгений Владимирович (bog5651)*Примерно 10.11.2017*Удачи!"); break;
 		case 3:*poz = 1; NumOfMenu = 2; break;
 		case 4:*poz = 1; break;
@@ -907,9 +896,9 @@ void nummenu(int *poz)
 	{
 		switch (*poz) //смотрим на какой позиции в этом меню
 		{
-		case 1:*poz = 1; mode = 1; feelMap(); break; //выполняем то что было на первом пункте и так далее
-		case 2:*poz = 1; mode = 2; feelMap(); break;
-		case 3:*poz = 1; mode = 3; feelMap(); break;
+		case 1:*poz = 1; current_level = 0; GenerateMap(); break; //выполняем то что было на первом пункте и так далее
+		case 2:*poz = 1; current_level = 1; GenerateMap(); break;
+		case 3:*poz = 1; current_level = 2; GenerateMap(); break;
 		case 4:*poz = 1; NumOfMenu = 1; break;
 		default: *poz = 1; break;
 		}
