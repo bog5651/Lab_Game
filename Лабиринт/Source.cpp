@@ -3,6 +3,7 @@
 #include <conio.h>
 #include <locale.h>
 #include <time.h>
+#include <thread>
 HWND hwnd;
 HDC hdc;
 HANDLE hStdOut = FindWindowW(WC_DIALOG, TEXT("lab")); //получаем handle
@@ -14,6 +15,7 @@ int poz = 1; // позиция в меню
 int NumOfMenu = 1; // начальная страница меню
 enum Status {Menu, Game, Pause};
 Status status = Menu;
+enum Music {Step, BackGroungMusicMenu, BackGroungMusicGame, ChoicePointOfMenu};
 const int izi = 10, normal = 25, hard = 40;
 int labA[izi][izi] = { 1,0,0,0,1,
 					   1,0,1,0,1,
@@ -37,6 +39,55 @@ struct RGB
 };
 struct RGB gan = { 255, 0, 0 }, zal = { 255,255,0 }; // стандартные gan - красный, zal - желтый(от слов граница и заливка)
 
+class II
+{
+public:
+	COORD LastPozitionPL;
+public:
+	void move()
+	{
+
+	};
+	bool seePL()
+	{
+		return 0;
+	};
+	COORD GetLastPozitionPL()
+	{
+		return LastPozitionPL;
+	};
+	bool WriteLastPositionPL(COORD pozition)
+	{
+		LastPozitionPL = pozition;
+	};
+	bool gotoLastPozPL()
+	{
+
+	}
+};
+
+void PlayMusic(Music Music)
+{
+	switch (Music)
+	{
+	case Step:
+	{
+		PlaySound(L"wood-step.wav", 0, SND_ASYNC);
+	}break;
+	case BackGroungMusicGame:
+	{
+		PlaySound(L"BackGroungMusicGame.wav", 0, SND_ASYNC);
+	}break;
+	case BackGroungMusicMenu:
+	{
+		PlaySound(L"BackGroungMusicMenu.wav", 0, SND_ASYNC);
+	}break;
+	case ChoicePointOfMenu:
+	{
+		PlaySound(L"click-switch.wav", 0, SND_ASYNC);
+	}break;
+	}
+}
 
 void ClearWindow()
 {
@@ -781,6 +832,8 @@ bool butgame(char key)
 
 void DrowGame()
 {
+	/*std::thread BackGround(PlayMusic, BackGroungMusicGame);
+	BackGround.detach();*/
 	RGB fin = { 139, 0, 255 }, strt = { 211, 31, 94 }; //цвета заливки для старта и финиша
 	char key = 0;
 	Set_Poz(pozPL);
@@ -834,6 +887,8 @@ void DrawMenu(int poz)
 //обработка позиции меню
 void nummenu(int *poz)
 {
+	std::thread Music(PlayMusic, ChoicePointOfMenu);
+	Music.detach();
 	switch (NumOfMenu)
 	{
 	case 1: //главное меню
@@ -927,6 +982,8 @@ LRESULT WINAPI mainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}break;
 		case Game:
 		{
+			std::thread Step(PlayMusic, Step);
+			Step.detach();
 			if (butgame(key[0]))
 				status = Menu;;
 		}break;
