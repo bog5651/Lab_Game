@@ -14,7 +14,7 @@ int poz = 1; // позиция в меню
 int NumOfMenu = 1; // начальная страница меню
 
 //---------Перечисляемые типы---------//
-enum direction { Up, Down, Left, Right }; // направления
+enum direction { Up, Down, Left, Right, NAD }; // направления, NAD(not a direction) - не направление
 enum Status { Menu, Game, Pause }; //статус программы
 enum Music { Step, BackGroungMusicMenu, BackGroungMusicGame, ChoicePointOfMenu }; //перечисление возможной музыки
 Status status = Menu;
@@ -23,8 +23,10 @@ Status status = Menu;
 short int current_level = 0; // переменная хранящая номер текущего уровня
 int SizeLevels[100] = {}; // матрица хранящая размеры уровней
 const int SizeSmall = 14, SizeMedium = 26, SizeBig = 38; //размерности уровня (3*3*n)+2, где n - любое число, означающее кол-во паттернов
+//short int where_the_pattern_is_already_drawn[100][SizeBig / 9][SizeBig / 9];
 short int Levels[100][SizeBig][SizeBig]; //трехмерная матрица хранящая все уровни
-short int Pattern[11][3][3] = //набор паттернов для постройки локации
+const int AmmounOfPattern = 11;
+short int Pattern[AmmounOfPattern][3][3] = //набор паттернов для постройки локации
 { 
 	{1,0,1,
 	 0,0,1,
@@ -534,12 +536,126 @@ COORD drawCoridor(COORD At, bool permitCollizionCoridors)
 	return End;
 }
 
+bool findPattern(COORD potentialСoordinates[], int amountCoordinates, int numOfPattern[], int *ammountFindPattetn, direction direct[])
+{
+	bool finded = false;
+	COORD check = { 0,0 };
+	direction PotentionalDirect;
+	int num = -1;
+	for (int i = 0; i < AmmounOfPattern; i++)
+	{
+		for (int j = 0; j < amountCoordinates; j++)
+		{
+			check = potentialСoordinates[j];
+			if (potentialСoordinates[j].X == 2)
+			{
+				check.X = 0;
+				PotentionalDirect = Right;
+			}
+			else
+			{
+				if (potentialСoordinates[j].X == 0)
+				{
+					check.X = 2;
+					PotentionalDirect = Left;
+				}
+			}
+			if (potentialСoordinates[j].Y == 2)
+			{
+				check.Y = 0;
+				PotentionalDirect = Down;
+			}
+			else
+			{
+				if (potentialСoordinates[j].Y == 0)
+				{
+					check.Y = 2;
+					PotentionalDirect = Up;
+				}
+			}
+			if (Pattern[i][check.Y][check.X] == 0)
+			{
+				numOfPattern[++num] = i; //записать номер паттерна
+				direct[num] = PotentionalDirect;
+				finded = true;
+			}
+		}
+	}
+	*ammountFindPattetn = num + 1;
+	return finded;
+}
+
+bool check_an_opportunity_to_draw_a_pattern(COORD position, COORD potentialСoordinates[], int *amountCoordinates)
+{
+	bool finded = false;
+	int num = -1;
+	COORD check = position;
+	check.X--;
+	for (int i = 0; i < 8; i++)
+	{
+		if (i<3)
+		{
+			check.X ++;
+			if (Levels[current_level][check.Y][check.X] == 0) //проверка верхней части куба
+			{
+				if ((check.Y - 1) > 0) //проверка края карты
+				{
+					potentialСoordinates[++num].X = check.X - position.X;
+					potentialСoordinates[num].Y = check.Y - position.Y;
+					finded = true;
+				}
+			}
+		}
+		if ((i > 2) && (i < 5))
+		{
+			check.Y++;
+			if (Levels[current_level][check.Y][check.X] == 0)//проверка правой части куба
+			{
+				if ((check.X + 1) < SizeLevels[current_level]) //проверка края карты
+				{
+					potentialСoordinates[++num].X = check.X - position.X;
+					potentialСoordinates[num].Y = check.Y - position.Y;
+					finded = true;
+				}
+			}
+		}
+		if ((i > 4) && (i < 7))
+		{
+			check.X--;
+			if (Levels[current_level][check.Y][check.X] == 0)//проверка нижней части куба
+			{
+				if ((check.Y + 1) < SizeLevels[current_level]) //проверка края карты
+				{
+					potentialСoordinates[++num].X = check.X - position.X;
+					potentialСoordinates[num].Y = check.Y - position.Y;
+					finded = true;
+				}
+			}
+		}
+		if (i == 7)
+		{
+			check.Y--;
+			if (Levels[current_level][check.Y][check.X] == 0)//провека левой чатси куба
+			{
+				if ((check.X - 1) > 0) //проверка края карты
+				{
+					potentialСoordinates[++num].X = check.X - position.X;
+					potentialСoordinates[num].Y = check.Y - position.Y;
+					finded = true;
+				}
+			}
+		}
+	}
+	*amountCoordinates = num + 1;
+	return finded;
+}
+
 void DrawPattern(COORD pozition, int NumberOfPattern)
 {
 	int i, j, PatternI, PatternJ;
 	for (i = pozition.Y, PatternI = 0; i < pozition.Y + 3; i++, PatternI++)
 	{
-		for (j = pozition.X, PatternJ = 0; j < pozition.Y + 3; j++, PatternJ++)
+		for (j = pozition.X, PatternJ = 0; j < pozition.X + 3; j++, PatternJ++)
 		{
 			Levels[current_level][i][j] = Pattern[NumberOfPattern][PatternI][PatternJ];
 		}
@@ -549,8 +665,14 @@ void DrawPattern(COORD pozition, int NumberOfPattern)
 void GenerateLocation()
 {
 	int i, j, k;
-	direction direct;
+	direction direct[AmmounOfPattern * 8];
 	COORD positionOFDraw = { 1,1 };
+	COORD potentialСoordinates[8] = {};
+	int amountCoordinates = 0;
+	int amountFindPattern = 0;
+	int numOfPattern[AmmounOfPattern * 8] = {};
+	int numOfLastPattern = 0;
+
 	int buf = rand() % 2; //выбор размера карты (2 переставить на 3)TODO
 	switch (buf)
 	{
@@ -566,6 +688,7 @@ void GenerateLocation()
 	default:
 		break;
 	}
+
 	for (i = 0; i < SizeOfMap(); i++) //заполнение Уровня единицами
 	{
 		for (j = 0; j < SizeOfMap(); j++)
@@ -574,29 +697,44 @@ void GenerateLocation()
 		}
 	}
 
-	int PotentialPattern = 4 + rand() % 2;
-	DrawPattern(positionOFDraw, PotentialPattern);//начальный паттерн
-	start = { 2,2 };
-	pozPL = start;
-	do
+	numOfLastPattern = 4 + rand() % 2;
+	DrawPattern(positionOFDraw, numOfLastPattern);//начальный паттерн
+
+	pozPL = finish = start = { 2,2 };
+
+	srand(time(NULL));
+	for(i = 0; i<SizeLevels[current_level];i++)
 	{
-		if (requestFromMap(positionOFDraw.X + 2, positionOFDraw.Y + 1) == 0) //проверка возможности рисовать вправо по паттерну
-		{
 
-		}
-		if (requestFromMap(positionOFDraw.X + 2, positionOFDraw.Y + 1) == 0) //проверка возможности рисовать вправо по паттерну
+		if (check_an_opportunity_to_draw_a_pattern(positionOFDraw, potentialСoordinates, &amountCoordinates))
 		{
-
+				if (findPattern(potentialСoordinates, amountCoordinates, numOfPattern, &amountFindPattern, direct))
+				{
+					buf = rand() % amountFindPattern;
+					switch (direct[buf])
+					{
+					case Up: 
+						positionOFDraw.Y -= 3;
+						break;
+					case Right: 
+						positionOFDraw.X += 3;
+						break;
+					case Down: 
+						positionOFDraw.Y += 3;
+						break;
+					case Left: 
+						positionOFDraw.X -= 3;
+						break;
+					default: 
+						break;
+					}
+					DrawPattern(positionOFDraw, numOfPattern[buf]);
+					numOfLastPattern = numOfPattern[buf];
+				}
 		}
-		if (requestFromMap(positionOFDraw.X + 2, positionOFDraw.Y + 1) == 0) //проверка возможности рисовать вправо по паттерну
-		{
-
-		}
-		if (requestFromMap(positionOFDraw.X + 2, positionOFDraw.Y + 1) == 0) //проверка возможности рисовать вправо по паттерну
-		{
-
-		}
-	} while (false);
+		else 
+			break;
+	}
 }
 
 //заполнение карты не работает
@@ -896,9 +1034,9 @@ void nummenu(int *poz)
 	{
 		switch (*poz) //смотрим на какой позиции в этом меню
 		{
-		case 1:*poz = 1; current_level = 0; GenerateMap(); break; //выполняем то что было на первом пункте и так далее
-		case 2:*poz = 1; current_level = 1; GenerateMap(); break;
-		case 3:*poz = 1; current_level = 2; GenerateMap(); break;
+		case 1:*poz = 1; current_level = 0; GenerateLocation(); break; //выполняем то что было на первом пункте и так далее
+		case 2:*poz = 1; current_level = 1; GenerateLocation(); break;
+		case 3:*poz = 1; current_level = 2; GenerateLocation(); break;
 		case 4:*poz = 1; NumOfMenu = 1; break;
 		default: *poz = 1; break;
 		}
