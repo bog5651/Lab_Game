@@ -226,7 +226,6 @@ int WriteText(RECT rect, char Text[], ...)
 	va_end(argp);
 	return i;
 }
-
 //вывод текста посимвольно
 void WriteTextSymbolBySymbol(RECT Rect,char Text[])
 {
@@ -256,105 +255,6 @@ void WriteTextSymbolBySymbol(RECT Rect,char Text[])
 	Sleep(200);
 }
 
-//возвращает размерность текущей карты
-int SizeOfMap()
-{
-	return SizeLevels[current_level];
-}
-
-void writeInMap(COORD r, int Level, int value)
-{
-	Levels[Level][r.Y][r.X] = value;
-}
-//возвращает содержимое €чейки лабиринта в x,y
-int requestFromMap(int x, int y)
-{
-	return Levels[current_level][y][x];
-}
-//возвращает содержимое €чейки лабиринта в x,y
-int requestFromMap(COORD Pozition)
-{
-	return Levels[current_level][Pozition.Y][Pozition.X];
-	/*switch (mode)
-	{
-	case 1: return labA[zapros.Y][zapros.X]; break;
-	case 2: return labB[zapros.Y][zapros.X]; break;
-	case 3: return labC[zapros.Y][zapros.X]; break;
-	}*/
-}
-//возвращает 1 если перд poz клеткой слева и справа стены, по направлению kyda
-//и 0 если есть хоть где-то проход
-bool nearbyFeel(COORD poz, direction direct)
-{
-	switch (direct)
-	{
-	case Up:
-	{
-		if (requestFromMap(poz.X + 1, poz.Y) == 1)
-		{
-			if (requestFromMap(poz.X - 1, poz.Y) == 1)
-			{
-				if (requestFromMap(poz.X, poz.Y - 1) == 1)
-				{
-					return true;
-				}
-				else return false;
-			}
-			else return false;
-		}
-		else return false;
-	}
-	break;
-	case Down:
-	{
-		if (requestFromMap(poz.X + 1, poz.Y) == 1)
-		{
-			if (requestFromMap(poz.X, poz.Y - 1) == 1)
-			{
-				if (requestFromMap(poz.X, poz.Y + 1) == 1)
-				{
-					return true;
-				}
-				else return false;
-			}
-			else return false;
-		}
-		else return false;
-	} break;
-	case Left:
-	{
-		if (requestFromMap(poz.X + 1, poz.Y) == 1)
-		{
-			if (requestFromMap(poz.X - 1, poz.Y) == 1)
-			{
-				if (requestFromMap(poz.X, poz.Y + 1) == 1)
-				{
-					return true;
-				}
-				else return false;
-			}
-			else return false;
-		}
-		else return false;
-	}break;
-	case Right:
-	{
-		if (requestFromMap(poz.X - 1, poz.Y) == 1)
-		{
-			if (requestFromMap(poz.X, poz.Y - 1) == 1)
-			{
-				if (requestFromMap(poz.X, poz.Y + 1) == 1)
-				{
-					return true;
-				}
-				else return false;
-			}
-			else return false;
-		}
-		else return false;
-	}break;
-	}
-}
 //сравнить две координаты, вернуть true если одинаковые
 bool sravn(COORD cr1, COORD cr2)
 {
@@ -367,173 +267,6 @@ bool sravn(COORD cr1, COORD cr2)
 		else return false;
 	}
 	else return false;
-}
-//проверить текущую точку в карте на "край карты"
-bool krayKarty(COORD check)
-{
-	if ((check.X == SizeOfMap() - 1) | (check.X == 1))
-		return 1;
-	if ((check.Y == SizeOfMap() - 1) | (check.Y == 1))
-		return 1;
-	return 0;
-}
-
-//permitCollizionCoridors передать 1 если хотим чтоб коридоры пересекались работает, но криво?
-COORD drawCoridor(COORD At, bool permitCollizionCoridors)
-{
-	int i = 0, j = 0;
-	int maxtry = permitCollizionCoridors ? 50 : 100; //максимальное кол-во попыток написовать лабиринт
-	int tru = 0; //сколько попыток было примененно
-	direction direct; // храним направлениt
-	int buf;
-	bool brk = false, ex = false;
-	COORD put, cbuf, End;//put путь. cbuf буфер дл€ пробного шага. End возвращаема€ координата конца коридора
-	End.X = 0;
-	End.Y = 0;
-	put = At;
-	brk = false;
-	writeInMap(At, current_level, 0);
-	do
-	{
-		buf = rand() % 4;
-		switch (buf)
-		{
-		case 0:
-			direct = Up;
-			if (put.Y - 2 == 1)
-			{
-				tru++;
-				break;
-			}
-			else
-			{
-				cbuf = put;
-				cbuf.Y--;
-				/*if (krayKarty(cbuf))
-				{
-					tru++;
-					break;
-				}*/
-				if ((nearbyFeel(cbuf, direct))&(!permitCollizionCoridors))
-				{
-					put.Y--;
-					writeInMap(put, current_level, 0);
-					tru = 0;
-				}
-				else tru++;
-				if (permitCollizionCoridors)
-				{
-					put.Y--;
-					writeInMap(put, current_level, 0);
-					tru++;
-				}
-			}
-			break;
-		case 1:
-			{
-				direct = Down;
-				if (put.Y + 1 == SizeOfMap() - 2)
-				{
-					tru++;
-					break;
-				}
-				else
-				{
-					cbuf = put;
-					cbuf.Y++;
-					/*if (krayKarty(cbuf))
-					{
-						tru++;
-						break;
-					}*/
-					if ((nearbyFeel(cbuf, direct))&(!permitCollizionCoridors))
-					{
-						put.Y++;
-						writeInMap(put, current_level, 0);
-						tru = 0;
-					}
-					else tru++;
-					if (permitCollizionCoridors)
-					{
-						put.Y++;
-						writeInMap(put, current_level, 0);
-						tru++;
-					}
-				}
-			}break;
-		case 2:
-			{
-				direct = Left;
-				if (put.X - 2 == 1)
-				{
-					tru++;
-					break;
-				}
-				else
-				{
-					cbuf = put;
-					cbuf.X--;
-					/*if (krayKarty(cbuf))
-					{
-						tru++;
-						break;
-					}*/
-					if ((nearbyFeel(cbuf, direct))&(!permitCollizionCoridors))
-					{
-						put.X--;
-						writeInMap(put, current_level, 0);
-						tru = 0;
-					}
-					else tru++;
-					if (permitCollizionCoridors)
-					{
-						put.X--;
-						writeInMap(put, current_level, 0);
-						tru++;
-					}
-				}
-			}break;
-		case 3:
-			{
-				direct = Right;
-				if (put.X + 1 == SizeOfMap() - 2)
-				{
-					tru++;
-					break;
-				}
-				else
-				{
-					cbuf = put;
-					cbuf.X++;
-					/*if (krayKarty(cbuf))
-					{
-						tru++;
-						break;
-					}*/
-					if ((nearbyFeel(cbuf, direct))&(!permitCollizionCoridors))
-					{
-						put.X++;
-						writeInMap(put, current_level, 0);
-						tru = 0;
-					}
-					else tru++;
-					if (permitCollizionCoridors)
-					{
-						put.X++;
-						writeInMap(put, current_level, 0);
-						tru++;
-					}
-				}
-			}break;
-		default:
-			break;
-		}
-		if (maxtry <= tru)
-		{
-			End = put;
-		}
-	} while (!sravn(put, End));
-	return End;
 }
 
 bool findPattern(COORD potential—oordinates[], int amountCoordinates, int numOfPattern[], int *ammountFindPattetn, direction direct[])
@@ -689,9 +422,9 @@ void GenerateLocation()
 		break;
 	}
 
-	for (i = 0; i < SizeOfMap(); i++) //заполнение ”ровн€ единицами
+	for (i = 0; i < SizeLevels[current_level]; i++) //заполнение ”ровн€ единицами
 	{
-		for (j = 0; j < SizeOfMap(); j++)
+		for (j = 0; j < SizeLevels[current_level]; j++)
 		{
 			Levels[current_level][i][j] = 1;
 		}
@@ -737,74 +470,6 @@ void GenerateLocation()
 	}
 }
 
-//заполнение карты не работает
-void GenerateMap()
-{
-	int i, j;
-	int buf;
-	bool brk = false, ex = false;
-	COORD tempForCoridor;
-	srand(time(NULL));
-	buf = rand() % 2; //выбор размера карты (переставить на 3)TODO
-	switch (buf)
-	{
-	case 0:
-		{
-			SizeLevels[current_level] = SizeSmall;
-		}break;
-	case 1:
-		{
-			SizeLevels[current_level] = SizeMedium;
-		}break;
-	case 2:
-		{
-			SizeLevels[current_level] = SizeBig;
-		}break;
-	default:
-		break;
-	}
-	for (i = 0; i < SizeOfMap(); i++)
-		{
-			for (j = 0; j < SizeOfMap(); j++)
-			{
-				Levels[current_level][i][j] = 1;
-			}
-		}
-	brk = true;
-	//выбор места старта и финиша
-	buf = rand() % 4; //выбор места старта
-	switch (buf)
-	{
-	case 0: start.Y = 1; start.X = 2 + rand() % (SizeOfMap() - 2); break;
-	case 1: start.X = (SizeOfMap() - 2); start.Y = 1 + rand() % (SizeOfMap() - 2); break;
-	case 2: start.Y = (SizeOfMap() - 2); start.X = 1 + rand() % (SizeOfMap() - 2); break;
-	case 3: start.X = 1; start.Y = 2 + rand() % (SizeOfMap() - 2); break;
-	}
-	pozPL = start;
-	finish = drawCoridor(start,0);
-	for (i = 0; i < SizeOfMap() / 1.5; i++)
-	{
-		buf = rand() % 4; //выбор места старта дл€ отрисовки случайных коридоров
-		switch (buf)
-		{
-		case 0: tempForCoridor.Y = 2; tempForCoridor.X = 2 + rand() % (SizeOfMap() - 2); break;
-		case 1: tempForCoridor.X = (SizeOfMap() - 2); tempForCoridor.Y = 2 + rand() % (SizeOfMap() - 2); break;
-		case 2: tempForCoridor.Y = (SizeOfMap() - 2); tempForCoridor.X = 2 + rand() % (SizeOfMap() - 2); break;
-		case 3: tempForCoridor.X = 2; tempForCoridor.Y = 2 + rand() % (SizeOfMap() - 2); break;
-		}
-		if (requestFromMap(tempForCoridor) != 0)
-		{
-			drawCoridor(tempForCoridor, 0);
-		}
-	}
-	/*for (i = 0; i<SizeOfMap()/3 ; i++)
-		for (j = 0; j< SizeOfMap()/3; j++)
-		{
-			put.X = 2 + rand() % (SizeOfMap() - 2);
-			put.Y = 2 + rand() % (SizeOfMap() - 2);
-			writeInMap(put, 0);
-		}*/
-}
 //установить в переменную tr по маштабу и смещению дл€ отрисовки на экране
 void Set_Poz(COORD poz)
 {
@@ -856,9 +521,9 @@ void DrawAllCurrentLevel()
 {
 	int i, j;
 	COORD ij;
-	for (i = 0; i < SizeOfMap(); i++)
+	for (i = 0; i < SizeLevels[current_level]; i++)
 	{
-		for (j = 0; j < SizeOfMap(); j++)
+		for (j = 0; j < SizeLevels[current_level]; j++)
 		{
 			ij.X = i;
 			ij.Y = j;
