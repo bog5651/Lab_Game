@@ -63,6 +63,15 @@ short int Pattern[AmmounOfPattern][3][3] = //набор паттернов для постройки локац
 	 1,0,1,}
 };
 
+//-------Хар-ки Игрока------//
+struct stat
+{
+	int Health;
+	int Strength;
+	int Dexterity;
+	int Stamin;
+} CharacteristicsPlayer = { 100,1,1,100 };
+
 //---------Графика---------//
 int Zume = 20; // маштаб
 int rasmer = 9; // размер стен
@@ -254,6 +263,16 @@ void WriteTextSymbolBySymbol(RECT Rect,char Text[])
 	}
 	Sleep(200);
 }
+
+bool Fighting(int potentialDamage, int dexterityEnemy, int *healthEnemy)
+{
+	if (CharacteristicsPlayer.Dexterity > dexterityEnemy)//если ловкость игрока выше ловкости врага нанести обратный дамаг
+	{
+		*healthEnemy -= 10;
+	}
+	else CharacteristicsPlayer.Health -= potentialDamage;//иначе нанести игроку потенциальный дамаг
+}
+
 
 //сравнить две координаты, вернуть true если одинаковые
 bool sravn(COORD cr1, COORD cr2)
