@@ -1,4 +1,4 @@
-#include <Windows.h>
+п»ї#include <Windows.h>
 #include <stdio.h>
 #include <conio.h>
 #include <locale.h>
@@ -6,28 +6,28 @@
 #include <thread>
 HWND hwnd;
 HDC hdc;
-HANDLE hStdOut = FindWindowW(WC_DIALOG, TEXT("lab")); //получаем handle
+HANDLE hStdOut = FindWindowW(WC_DIALOG, TEXT("lab")); //РїРѕР»СѓС‡Р°РµРј handle
 
-//---------Переменные необходимые для меню---------//
-int PunctOf1Menu = 5, PunctOf2Menu = 4, PunctOf3Menu = 0, PunctOf4Menu = 0; // кол-во пунктов в меню и подменю, при необходимости дополнить
-int poz = 1; // позиция в меню
-int NumOfMenu = 1; // начальная страница меню
+//---------РџРµСЂРµРјРµРЅРЅС‹Рµ РЅРµРѕР±С…РѕРґРёРјС‹Рµ РґР»СЏ РјРµРЅСЋ---------//
+int PunctOf1Menu = 5, PunctOf2Menu = 4, PunctOf3Menu = 0, PunctOf4Menu = 0; // РєРѕР»-РІРѕ РїСѓРЅРєС‚РѕРІ РІ РјРµРЅСЋ Рё РїРѕРґРјРµРЅСЋ, РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РґРѕРїРѕР»РЅРёС‚СЊ
+int poz = 1; // РїРѕР·РёС†РёСЏ РІ РјРµРЅСЋ
+int NumOfMenu = 1; // РЅР°С‡Р°Р»СЊРЅР°СЏ СЃС‚СЂР°РЅРёС†Р° РјРµРЅСЋ
 
-//---------Перечисляемые типы---------//
-enum direction { Up, Down, Left, Right, NAD }; // направления, NAD(not a direction) - не направление
-enum Status { Menu, Game, Pause }; //статус программы
-enum Music { Step, BackGroungMusicMenu, BackGroungMusicGame, ChoicePointOfMenu }; //перечисление возможной музыки
+//---------РџРµСЂРµС‡РёСЃР»СЏРµРјС‹Рµ С‚РёРїС‹---------//
+enum direction { Up, Down, Left, Right, NAD }; // РЅР°РїСЂР°РІР»РµРЅРёСЏ, NAD(not a direction) - РЅРµ РЅР°РїСЂР°РІР»РµРЅРёРµ
+enum Status { Menu, Game, Pause }; //СЃС‚Р°С‚СѓСЃ РїСЂРѕРіСЂР°РјРјС‹
+enum Music { Step, BackGroungMusicMenu, BackGroungMusicGame, ChoicePointOfMenu }; //РїРµСЂРµС‡РёСЃР»РµРЅРёРµ РІРѕР·РјРѕР¶РЅРѕР№ РјСѓР·С‹РєРё
 Status status = Menu;
 
-//---------Уровни---------//
-short int current_level = 0; // переменная хранящая номер текущего уровня
-int SizeLevels[100] = {}; // матрица хранящая размеры уровней
-const int SizeSmall = 14, SizeMedium = 26, SizeBig = 38; //размерности уровня (3*3*n)+2, где n - любое число, означающее кол-во паттернов
+//---------РЈСЂРѕРІРЅРё---------//
+short int current_level = 0; // РїРµСЂРµРјРµРЅРЅР°СЏ С…СЂР°РЅСЏС‰Р°СЏ РЅРѕРјРµСЂ С‚РµРєСѓС‰РµРіРѕ СѓСЂРѕРІРЅСЏ
+int SizeLevels[100] = {}; // РјР°С‚СЂРёС†Р° С…СЂР°РЅСЏС‰Р°СЏ СЂР°Р·РјРµСЂС‹ СѓСЂРѕРІРЅРµР№
+const int SizeSmall = 14, SizeMedium = 26, SizeBig = 38; //СЂР°Р·РјРµСЂРЅРѕСЃС‚Рё СѓСЂРѕРІРЅСЏ (3*3*n)+2, РіРґРµ n - Р»СЋР±РѕРµ С‡РёСЃР»Рѕ, РѕР·РЅР°С‡Р°СЋС‰РµРµ РєРѕР»-РІРѕ РїР°С‚С‚РµСЂРЅРѕРІ
 //short int where_the_pattern_is_already_drawn[100][SizeBig / 9][SizeBig / 9];
-short int Levels[100][SizeBig][SizeBig]; //трехмерная матрица хранящая все уровни
+short int Levels[100][SizeBig][SizeBig]; //С‚СЂРµС…РјРµСЂРЅР°СЏ РјР°С‚СЂРёС†Р° С…СЂР°РЅСЏС‰Р°СЏ РІСЃРµ СѓСЂРѕРІРЅРё
 const int AmmounOfPattern = 11;
-short int Pattern[AmmounOfPattern][3][3] = //набор паттернов для постройки локации
-{ 
+short int Pattern[AmmounOfPattern][3][3] = //РЅР°Р±РѕСЂ РїР°С‚С‚РµСЂРЅРѕРІ РґР»СЏ РїРѕСЃС‚СЂРѕР№РєРё Р»РѕРєР°С†РёРё
+{
 	{1,0,1,
 	 0,0,1,
 	 1,1,1},
@@ -63,33 +63,38 @@ short int Pattern[AmmounOfPattern][3][3] = //набор паттернов для постройки локац
 	 1,0,1,}
 };
 
-//-------Хар-ки Игрока------//
-struct stat
-{
-	int Health;
-	int Strength;
-	int Dexterity;
-	int Stamin;
-} CharacteristicsPlayer = { 100,1,1,100 };
+//-------РҐР°СЂ-РєРё РРіСЂРѕРєР°------//
+struct statics {
+	int Health, Strength, Dexterity, Stamin;
+};
+statics CharacteristicsPlayer = { 100,1,1,100 };
 
-//---------Графика---------//
-int Zume = 20; // маштаб
-int rasmer = 9; // размер стен
-int razPL = 5; //размер круга игрока
-HPEN hpen1; //объявляем объект перо
+//---------Р“СЂР°С„РёРєР°---------//
+int Zume = 20; // РјР°С€С‚Р°Р±
+int rasmer = 9; // СЂР°Р·РјРµСЂ СЃС‚РµРЅ
+int razPL = 5; //СЂР°Р·РјРµСЂ РєСЂСѓРіР° РёРіСЂРѕРєР°
+HPEN hpen1; //РѕР±СЉСЏРІР»СЏРµРј РѕР±СЉРµРєС‚ РїРµСЂРѕ
 HGDIOBJ hpenOld, hbrushOld;
-HBRUSH hbrush; //объявляем кисть
+HBRUSH hbrush; //РѕР±СЉСЏРІР»СЏРµРј РєРёСЃС‚СЊ
 
-//---------Координаты---------//
-COORD start, finish; //координата старта, финиша
-COORD pozPL = {}; //координата позиции игрока
-COORD tr; //координата на экране. переменная для отрисоки стены и игрока
+//---------РљРѕРѕСЂРґРёРЅР°С‚С‹---------//
+COORD start, finish; //РєРѕРѕСЂРґРёРЅР°С‚Р° СЃС‚Р°СЂС‚Р°, С„РёРЅРёС€Р°
+COORD pozPL = {}; //РєРѕРѕСЂРґРёРЅР°С‚Р° РїРѕР·РёС†РёРё РёРіСЂРѕРєР°
+COORD tr; //РєРѕРѕСЂРґРёРЅР°С‚Р° РЅР° СЌРєСЂР°РЅРµ. РїРµСЂРµРјРµРЅРЅР°СЏ РґР»СЏ РѕС‚СЂРёСЃРѕРєРё СЃС‚РµРЅС‹ Рё РёРіСЂРѕРєР°
 
-struct RGB
-{
+struct RGB {
 	int r, g, b;
 };
-struct RGB gan = { 255, 0, 0 }, zal = { 255,255,0 }; // стандартные gan - красный, zal - желтый(от слов граница и заливка)
+const RGB CL_WHITE = { 255,255,255 };
+const RGB CL_BLACK = { 0,0,0 };
+const RGB CL_YELLOW = { 255,255,0 };
+const RGB CL_RED = { 255,0,0 };
+const RGB CL_GREEN = { 0,255,0 };
+const RGB CL_BLUE = { 0,0,255 };
+const RGB CL_LIGHTBLUE = { 102,102,255 };
+const RGB CL_DARKGRAY = { 102,102,102 };
+const RGB CL_GRAY = { 204,204,204 };
+const RGB CL_SKIN = { 226,185,143 };
 
 class II
 {
@@ -148,51 +153,53 @@ void ClearWindow()
 	GetClientRect(hwnd, &r);
 	FillRect(hdc, &r, (HBRUSH)(COLOR_WINDOW + 1));
 }
-// прямоугольник по центру+радиус
-void rect(COORD rect, int rad, RGB gran, RGB zalivka)
+// РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРє РїРѕ С†РµРЅС‚СЂСѓ, РґР»РёРЅРЅРµ Рё РІС‹СЃРѕС‚Рµ
+void RectangleOnCOODR(COORD rect, int length, int height, RGB foregrount, RGB background)
 {
-	hpen1 = CreatePen(PS_SOLID, 2, RGB(gran.r, gran.g, gran.b)); //логическое перо с заданным стилем, шириной и цветом
-	hbrush = CreateSolidBrush(RGB(zalivka.r, zalivka.g, zalivka.b)); //логическая кисть с заданным стилем, шириной и цветом
+	hpen1 = CreatePen(PS_SOLID, 2, RGB(foregrount.r, foregrount.g, foregrount.b)); //Р»РѕРіРёС‡РµСЃРєРѕРµ РїРµСЂРѕ СЃ Р·Р°РґР°РЅРЅС‹Рј СЃС‚РёР»РµРј, С€РёСЂРёРЅРѕР№ Рё С†РІРµС‚РѕРј
+	hbrush = CreateSolidBrush(RGB(background.r, background.g, background.b)); //Р»РѕРіРёС‡РµСЃРєР°СЏ РєРёСЃС‚СЊ СЃ Р·Р°РґР°РЅРЅС‹Рј СЃС‚РёР»РµРј, С€РёСЂРёРЅРѕР№ Рё С†РІРµС‚РѕРј
 	hbrushOld = (HBRUSH)SelectObject(hdc, hbrush);
 	hpenOld = (HPEN)SelectObject(hdc, hpen1);
-	Rectangle(hdc, rect.X + rad, rect.Y + rad, rect.X - rad, rect.Y - rad); //рисование прямоугольника
-	DeleteObject(hpen1);       // Удаляем созданное перо
-	DeleteObject(hbrush);       // Удаляем созданную кисть
+	Rectangle(hdc, rect.X + length, rect.Y + height, rect.X - length, rect.Y - height); //СЂРёСЃРѕРІР°РЅРёРµ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР°
+	DeleteObject(hpen1); // РЈРґР°Р»СЏРµРј СЃРѕР·РґР°РЅРЅРѕРµ РїРµСЂРѕ
+	DeleteObject(hbrush); // РЈРґР°Р»СЏРµРј СЃРѕР·РґР°РЅРЅСѓСЋ РєРёСЃС‚СЊ
 }
-//рисование прямоугольника по RECT
-void rect(RECT h, RGB gran, RGB zalivka)
+//СЂРёСЃРѕРІР°РЅРёРµ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР° РїРѕ RECT
+void RectangleOnRECT(RECT h, RGB foregrount, RGB background)
 {
-	hpen1 = CreatePen(PS_SOLID, 2, RGB(gran.r, gran.g, gran.b)); //логическое перо с заданным стилем, шириной и цветом
-	hbrush = CreateSolidBrush(RGB(zalivka.r, zalivka.g, zalivka.b)); //логическая кисть с заданным стилем, шириной и цветом
+	hpen1 = CreatePen(PS_SOLID, 2, RGB(foregrount.r, foregrount.g, foregrount.b)); //Р»РѕРіРёС‡РµСЃРєРѕРµ РїРµСЂРѕ СЃ Р·Р°РґР°РЅРЅС‹Рј СЃС‚РёР»РµРј, С€РёСЂРёРЅРѕР№ Рё С†РІРµС‚РѕРј
+	hbrush = CreateSolidBrush(RGB(background.r, background.g, background.b)); //Р»РѕРіРёС‡РµСЃРєР°СЏ РєРёСЃС‚СЊ СЃ Р·Р°РґР°РЅРЅС‹Рј СЃС‚РёР»РµРј, С€РёСЂРёРЅРѕР№ Рё С†РІРµС‚РѕРј
 	hbrushOld = (HBRUSH)SelectObject(hdc, hbrush);
 	hpenOld = (HPEN)SelectObject(hdc, hpen1);
-	Rectangle(hdc, h.left, h.top, h.right, h.bottom); //рисование прямоугольника
-	DeleteObject(hpen1);       // Удаляем созданное перо
-	DeleteObject(hbrush);       // Удаляем созданную кисть
+	Rectangle(hdc, h.left, h.top, h.right, h.bottom); //СЂРёСЃРѕРІР°РЅРёРµ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР°
+	DeleteObject(hpen1); // РЈРґР°Р»СЏРµРј СЃРѕР·РґР°РЅРЅРѕРµ РїРµСЂРѕ
+	DeleteObject(hbrush); // РЈРґР°Р»СЏРµРј СЃРѕР·РґР°РЅРЅСѓСЋ РєРёСЃС‚СЊ
 }
-//рисование многоугольника по точкам
-void rect(COORD xy1, COORD xy2, COORD xy3, COORD xy4, RGB gran)
+//СЂРёСЃРѕРІР°РЅРёРµ РѕР±СЉРµРєС‚Р° РїРѕ С‚РѕС‡РєР°Рј
+void SimpleFigure(COORD xy[], int countPoint, RGB foregrount)
 {
-	hpen1 = CreatePen(PS_SOLID, 2, RGB(gran.r, gran.g, gran.b)); //логическое перо с заданным стилем, шириной и цветом
-	MoveToEx(hdc, xy1.X, xy1.Y, NULL);
-	LineTo(hdc, xy2.X, xy2.Y);
-	LineTo(hdc, xy3.X, xy3.Y);
-	LineTo(hdc, xy4.X, xy4.Y);
-	LineTo(hdc, xy1.X, xy1.Y);
-	DeleteObject(hpen1);       // Удаляем созданное перо
+	hpen1 = CreatePen(PS_SOLID, 2, RGB(foregrount.r, foregrount.g, foregrount.b)); //Р»РѕРіРёС‡РµСЃРєРѕРµ РїРµСЂРѕ СЃ Р·Р°РґР°РЅРЅС‹Рј СЃС‚РёР»РµРј, С€РёСЂРёРЅРѕР№ Рё С†РІРµС‚РѕРј
+	hpenOld = (HPEN)SelectObject(hdc, hpen1);
+	MoveToEx(hdc, xy[0].X, xy[0].Y, NULL);
+	for (int i = 1; i < countPoint; i++)
+	{
+		LineTo(hdc, xy[i].X, xy[i].Y);
+	}
+	LineTo(hdc, xy[0].X, xy[0].Y);
+	DeleteObject(hpen1); // РЈРґР°Р»СЏРµРј СЃРѕР·РґР°РЅРЅРѕРµ РїРµСЂРѕ
 }
-// круг по центру+радиус
-void elps(COORD rect, int rad, RGB gran, RGB zalivka)
+// РєСЂСѓРі РїРѕ С†РµРЅС‚СЂСѓ, С€РёСЂРёРЅРµ Рё РґР»РёРЅРЅРµ
+void ElipseOnCOORD(COORD rect, int length, int height, RGB foregrount, RGB background)
 {
-	hpen1 = CreatePen(PS_SOLID, 2, RGB(gran.r, gran.g, gran.b)); //логическое перо с заданным стилем, шириной и цветом
-	hbrush = CreateSolidBrush(RGB(zalivka.r, zalivka.g, zalivka.b)); //логическая кисть с заданным стилем, шириной и цветом
+	hpen1 = CreatePen(PS_SOLID, 2, RGB(foregrount.r, foregrount.g, foregrount.b)); //Р»РѕРіРёС‡РµСЃРєРѕРµ РїРµСЂРѕ СЃ Р·Р°РґР°РЅРЅС‹Рј СЃС‚РёР»РµРј, С€РёСЂРёРЅРѕР№ Рё С†РІРµС‚РѕРј
+	hbrush = CreateSolidBrush(RGB(background.r, background.g, background.b)); //Р»РѕРіРёС‡РµСЃРєР°СЏ РєРёСЃС‚СЊ СЃ Р·Р°РґР°РЅРЅС‹Рј СЃС‚РёР»РµРј, С€РёСЂРёРЅРѕР№ Рё С†РІРµС‚РѕРј
 	hbrushOld = (HBRUSH)SelectObject(hdc, hbrush);
 	hpenOld = (HPEN)SelectObject(hdc, hpen1);
-	Ellipse(hdc, rect.X + rad, rect.Y + rad, rect.X - rad, rect.Y - rad);
-	DeleteObject(hpen1);       // Удаляем созданное перо
-	DeleteObject(hbrush);       // Удаляем созданную кисть
+	Ellipse(hdc, rect.X + length, rect.Y + height, rect.X - length, rect.Y - height);
+	DeleteObject(hpen1); // РЈРґР°Р»СЏРµРј СЃРѕР·РґР°РЅРЅРѕРµ РїРµСЂРѕ
+	DeleteObject(hbrush); // РЈРґР°Р»СЏРµРј СЃРѕР·РґР°РЅРЅСѓСЋ РєРёСЃС‚СЊ
 }
-//вывод текста не работает
+//РІС‹РІРѕРґ С‚РµРєСЃС‚Р° (РЅРµ СЂР°Р±РѕС‚Р°РµС‚)
 int WriteText(RECT rect, char Text[], ...)
 {
 	va_list argp;
@@ -218,7 +225,7 @@ int WriteText(RECT rect, char Text[], ...)
 				TextOutA(hdc, rect.top, rect.right, (LPCSTR)OutFloat, strlen((char*)OutFloat));
 				//DrawTextA(hdc, OutFloat, -1, &rect, DT_LEFT);
 			}
-			if ((Text[i + 1] == 's')| (Text[i + 1] == 'c'))
+			if ((Text[i + 1] == 's') | (Text[i + 1] == 'c'))
 			{
 				OutChar = va_arg(argp, char*);
 				TextOutA(hdc, rect.top, rect.right, OutChar, strlen(OutChar));
@@ -235,11 +242,11 @@ int WriteText(RECT rect, char Text[], ...)
 	va_end(argp);
 	return i;
 }
-//вывод текста посимвольно
-void WriteTextSymbolBySymbol(RECT Rect,char Text[])
+//РІС‹РІРѕРґ С‚РµРєСЃС‚Р° РїРѕСЃРёРјРІРѕР»СЊРЅРѕ
+void WriteTextSymbolBySymbol(RECT Rect, char Text[])
 {
-	int i = 0, time=0;
-	//char About[] = { "Привет!*я смотрю ты заинтересовался игрой?*забавно)*А ведь я ее пилил чисто по приколу, лишь бы набраться опыта работы с WinApi*Но как не крути я забил на разработку примерно 5 месяцев и напроч забыл чему научился XD*В общем создал ее Дивольд Евгений Владимирович (bog5651)*Примерно 10.11.2017*Удачи!" };
+	int i = 0, time = 0;
+	//char About[] = { "РџСЂРёРІРµС‚!*СЏ СЃРјРѕС‚СЂСЋ С‚С‹ Р·Р°РёРЅС‚РµСЂРµСЃРѕРІР°Р»СЃСЏ РёРіСЂРѕР№?*Р·Р°Р±Р°РІРЅРѕ)*Рђ РІРµРґСЊ СЏ РµРµ РїРёР»РёР» С‡РёСЃС‚Рѕ РїРѕ РїСЂРёРєРѕР»Сѓ, Р»РёС€СЊ Р±С‹ РЅР°Р±СЂР°С‚СЊСЃСЏ РѕРїС‹С‚Р° СЂР°Р±РѕС‚С‹ СЃ WinApi*РќРѕ РєР°Рє РЅРµ РєСЂСѓС‚Рё СЏ Р·Р°Р±РёР» РЅР° СЂР°Р·СЂР°Р±РѕС‚РєСѓ РїСЂРёРјРµСЂРЅРѕ 5 РјРµСЃСЏС†РµРІ Рё РЅР°РїСЂРѕС‡ Р·Р°Р±С‹Р» С‡РµРјСѓ РЅР°СѓС‡РёР»СЃСЏ XD*Р’ РѕР±С‰РµРј СЃРѕР·РґР°Р» РµРµ Р”РёРІРѕР»СЊРґ Р•РІРіРµРЅРёР№ Р’Р»Р°РґРёРјРёСЂРѕРІРёС‡ (bog5651)*РџСЂРёРјРµСЂРЅРѕ 10.11.2017*РЈРґР°С‡Рё!" };
 	for (i; i < strlen(Text); i++)
 	{
 		if (kbhit())
@@ -252,7 +259,7 @@ void WriteTextSymbolBySymbol(RECT Rect,char Text[])
 		}
 		if (Text[i] == '*')
 		{
-			Sleep(time*50);
+			Sleep(time * 50);
 			ClearWindow();
 			time = 0;
 			i++;
@@ -266,15 +273,15 @@ void WriteTextSymbolBySymbol(RECT Rect,char Text[])
 
 bool Fighting(int potentialDamage, int dexterityEnemy, int *healthEnemy)
 {
-	if (CharacteristicsPlayer.Dexterity > dexterityEnemy)//если ловкость игрока выше ловкости врага нанести обратный дамаг
+	if (CharacteristicsPlayer.Dexterity > dexterityEnemy)//РµСЃР»Рё Р»РѕРІРєРѕСЃС‚СЊ РёРіСЂРѕРєР° РІС‹С€Рµ Р»РѕРІРєРѕСЃС‚Рё РІСЂР°РіР° РЅР°РЅРµСЃС‚Рё РѕР±СЂР°С‚РЅС‹Р№ РґР°РјР°Рі
 	{
 		*healthEnemy -= 10;
 	}
-	else CharacteristicsPlayer.Health -= potentialDamage;//иначе нанести игроку потенциальный дамаг
+	else CharacteristicsPlayer.Health -= potentialDamage;//РёРЅР°С‡Рµ РЅР°РЅРµСЃС‚Рё РёРіСЂРѕРєСѓ РїРѕС‚РµРЅС†РёР°Р»СЊРЅС‹Р№ РґР°РјР°Рі
+	return 0;
 }
 
-
-//сравнить две координаты, вернуть true если одинаковые
+//СЃСЂР°РІРЅРёС‚СЊ РґРІРµ РєРѕРѕСЂРґРёРЅР°С‚С‹, РІРµСЂРЅСѓС‚СЊ true РµСЃР»Рё РѕРґРёРЅР°РєРѕРІС‹Рµ
 bool sravn(COORD cr1, COORD cr2)
 {
 	if (cr1.X == cr2.X)
@@ -288,7 +295,7 @@ bool sravn(COORD cr1, COORD cr2)
 	else return false;
 }
 
-bool findPattern(COORD potentialСoordinates[], int amountCoordinates, int numOfPattern[], int *ammountFindPattetn, direction direct[])
+bool findPattern(COORD potentialРЎoordinates[], int amountCoordinates, int numOfPattern[], int *ammountFindPattetn, direction direct[])
 {
 	bool finded = false;
 	COORD check = { 0,0 };
@@ -298,28 +305,28 @@ bool findPattern(COORD potentialСoordinates[], int amountCoordinates, int numOfP
 	{
 		for (int j = 0; j < amountCoordinates; j++)
 		{
-			check = potentialСoordinates[j];
-			if (potentialСoordinates[j].X == 2)
+			check = potentialРЎoordinates[j];
+			if (potentialРЎoordinates[j].X == 2)
 			{
 				check.X = 0;
 				PotentionalDirect = Right;
 			}
 			else
 			{
-				if (potentialСoordinates[j].X == 0)
+				if (potentialРЎoordinates[j].X == 0)
 				{
 					check.X = 2;
 					PotentionalDirect = Left;
 				}
 			}
-			if (potentialСoordinates[j].Y == 2)
+			if (potentialРЎoordinates[j].Y == 2)
 			{
 				check.Y = 0;
 				PotentionalDirect = Down;
 			}
 			else
 			{
-				if (potentialСoordinates[j].Y == 0)
+				if (potentialРЎoordinates[j].Y == 0)
 				{
 					check.Y = 2;
 					PotentionalDirect = Up;
@@ -327,7 +334,7 @@ bool findPattern(COORD potentialСoordinates[], int amountCoordinates, int numOfP
 			}
 			if (Pattern[i][check.Y][check.X] == 0)
 			{
-				numOfPattern[++num] = i; //записать номер паттерна
+				numOfPattern[++num] = i; //Р·Р°РїРёСЃР°С‚СЊ РЅРѕРјРµСЂ РїР°С‚С‚РµСЂРЅР°
 				direct[num] = PotentionalDirect;
 				finded = true;
 			}
@@ -337,7 +344,7 @@ bool findPattern(COORD potentialСoordinates[], int amountCoordinates, int numOfP
 	return finded;
 }
 
-bool check_an_opportunity_to_draw_a_pattern(COORD position, COORD potentialСoordinates[], int *amountCoordinates)
+bool check_an_opportunity_to_draw_a_pattern(COORD position, COORD potentialРЎoordinates[], int *amountCoordinates)
 {
 	bool finded = false;
 	int num = -1;
@@ -345,15 +352,15 @@ bool check_an_opportunity_to_draw_a_pattern(COORD position, COORD potentialСoord
 	check.X--;
 	for (int i = 0; i < 8; i++)
 	{
-		if (i<3)
+		if (i < 3)
 		{
-			check.X ++;
-			if (Levels[current_level][check.Y][check.X] == 0) //проверка верхней части куба
+			check.X++;
+			if (Levels[current_level][check.Y][check.X] == 0) //РїСЂРѕРІРµСЂРєР° РІРµСЂС…РЅРµР№ С‡Р°СЃС‚Рё РєСѓР±Р°
 			{
-				if ((check.Y - 1) > 0) //проверка края карты
+				if ((check.Y - 1) > 0) //РїСЂРѕРІРµСЂРєР° РєСЂР°СЏ РєР°СЂС‚С‹
 				{
-					potentialСoordinates[++num].X = check.X - position.X;
-					potentialСoordinates[num].Y = check.Y - position.Y;
+					potentialРЎoordinates[++num].X = check.X - position.X;
+					potentialРЎoordinates[num].Y = check.Y - position.Y;
 					finded = true;
 				}
 			}
@@ -361,12 +368,12 @@ bool check_an_opportunity_to_draw_a_pattern(COORD position, COORD potentialСoord
 		if ((i > 2) && (i < 5))
 		{
 			check.Y++;
-			if (Levels[current_level][check.Y][check.X] == 0)//проверка правой части куба
+			if (Levels[current_level][check.Y][check.X] == 0)//РїСЂРѕРІРµСЂРєР° РїСЂР°РІРѕР№ С‡Р°СЃС‚Рё РєСѓР±Р°
 			{
-				if ((check.X + 1) < SizeLevels[current_level]) //проверка края карты
+				if ((check.X + 1) < SizeLevels[current_level]) //РїСЂРѕРІРµСЂРєР° РєСЂР°СЏ РєР°СЂС‚С‹
 				{
-					potentialСoordinates[++num].X = check.X - position.X;
-					potentialСoordinates[num].Y = check.Y - position.Y;
+					potentialРЎoordinates[++num].X = check.X - position.X;
+					potentialРЎoordinates[num].Y = check.Y - position.Y;
 					finded = true;
 				}
 			}
@@ -374,12 +381,12 @@ bool check_an_opportunity_to_draw_a_pattern(COORD position, COORD potentialСoord
 		if ((i > 4) && (i < 7))
 		{
 			check.X--;
-			if (Levels[current_level][check.Y][check.X] == 0)//проверка нижней части куба
+			if (Levels[current_level][check.Y][check.X] == 0)//РїСЂРѕРІРµСЂРєР° РЅРёР¶РЅРµР№ С‡Р°СЃС‚Рё РєСѓР±Р°
 			{
-				if ((check.Y + 1) < SizeLevels[current_level]) //проверка края карты
+				if ((check.Y + 1) < SizeLevels[current_level]) //РїСЂРѕРІРµСЂРєР° РєСЂР°СЏ РєР°СЂС‚С‹
 				{
-					potentialСoordinates[++num].X = check.X - position.X;
-					potentialСoordinates[num].Y = check.Y - position.Y;
+					potentialРЎoordinates[++num].X = check.X - position.X;
+					potentialРЎoordinates[num].Y = check.Y - position.Y;
 					finded = true;
 				}
 			}
@@ -387,12 +394,12 @@ bool check_an_opportunity_to_draw_a_pattern(COORD position, COORD potentialСoord
 		if (i == 7)
 		{
 			check.Y--;
-			if (Levels[current_level][check.Y][check.X] == 0)//провека левой чатси куба
+			if (Levels[current_level][check.Y][check.X] == 0)//РїСЂРѕРІРµРєР° Р»РµРІРѕР№ С‡Р°С‚СЃРё РєСѓР±Р°
 			{
-				if ((check.X - 1) > 0) //проверка края карты
+				if ((check.X - 1) > 0) //РїСЂРѕРІРµСЂРєР° РєСЂР°СЏ РєР°СЂС‚С‹
 				{
-					potentialСoordinates[++num].X = check.X - position.X;
-					potentialСoordinates[num].Y = check.Y - position.Y;
+					potentialРЎoordinates[++num].X = check.X - position.X;
+					potentialРЎoordinates[num].Y = check.Y - position.Y;
 					finded = true;
 				}
 			}
@@ -419,13 +426,13 @@ void GenerateLocation()
 	int i, j, k;
 	direction direct[AmmounOfPattern * 8];
 	COORD positionOFDraw = { 1,1 };
-	COORD potentialСoordinates[8] = {};
+	COORD potentialРЎoordinates[8] = {};
 	int amountCoordinates = 0;
 	int amountFindPattern = 0;
 	int numOfPattern[AmmounOfPattern * 8] = {};
 	int numOfLastPattern = 0;
 
-	int buf = rand() % 2; //выбор размера карты (2 переставить на 3)TODO
+	int buf = rand() % 2; //РІС‹Р±РѕСЂ СЂР°Р·РјРµСЂР° РєР°СЂС‚С‹ (2 РїРµСЂРµСЃС‚Р°РІРёС‚СЊ РЅР° 3)TODO
 	switch (buf)
 	{
 	case 0:
@@ -441,7 +448,7 @@ void GenerateLocation()
 		break;
 	}
 
-	for (i = 0; i < SizeLevels[current_level]; i++) //заполнение Уровня единицами
+	for (i = 0; i < SizeLevels[current_level]; i++) //Р·Р°РїРѕР»РЅРµРЅРёРµ РЈСЂРѕРІРЅСЏ РµРґРёРЅРёС†Р°РјРё
 	{
 		for (j = 0; j < SizeLevels[current_level]; j++)
 		{
@@ -450,55 +457,55 @@ void GenerateLocation()
 	}
 
 	numOfLastPattern = 4 + rand() % 2;
-	DrawPattern(positionOFDraw, numOfLastPattern);//начальный паттерн
+	DrawPattern(positionOFDraw, numOfLastPattern);//РЅР°С‡Р°Р»СЊРЅС‹Р№ РїР°С‚С‚РµСЂРЅ
 
 	pozPL = finish = start = { 2,2 };
 
 	srand(time(NULL));
-	for(i = 0; i<SizeLevels[current_level];i++)
+	for (i = 0; i < SizeLevels[current_level]; i++)
 	{
 
-		if (check_an_opportunity_to_draw_a_pattern(positionOFDraw, potentialСoordinates, &amountCoordinates))
+		if (check_an_opportunity_to_draw_a_pattern(positionOFDraw, potentialРЎoordinates, &amountCoordinates))
 		{
-				if (findPattern(potentialСoordinates, amountCoordinates, numOfPattern, &amountFindPattern, direct))
+			if (findPattern(potentialРЎoordinates, amountCoordinates, numOfPattern, &amountFindPattern, direct))
+			{
+				buf = rand() % amountFindPattern;
+				switch (direct[buf])
 				{
-					buf = rand() % amountFindPattern;
-					switch (direct[buf])
-					{
-					case Up: 
-						positionOFDraw.Y -= 3;
-						break;
-					case Right: 
-						positionOFDraw.X += 3;
-						break;
-					case Down: 
-						positionOFDraw.Y += 3;
-						break;
-					case Left: 
-						positionOFDraw.X -= 3;
-						break;
-					default: 
-						break;
-					}
-					DrawPattern(positionOFDraw, numOfPattern[buf]);
-					numOfLastPattern = numOfPattern[buf];
+				case Up:
+					positionOFDraw.Y -= 3;
+					break;
+				case Right:
+					positionOFDraw.X += 3;
+					break;
+				case Down:
+					positionOFDraw.Y += 3;
+					break;
+				case Left:
+					positionOFDraw.X -= 3;
+					break;
+				default:
+					break;
 				}
+				DrawPattern(positionOFDraw, numOfPattern[buf]);
+				numOfLastPattern = numOfPattern[buf];
+			}
 		}
-		else 
+		else
 			break;
 	}
 }
 
-//установить в переменную tr по маштабу и смещению для отрисовки на экране
+//СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РІ РїРµСЂРµРјРµРЅРЅСѓСЋ tr РїРѕ РјР°С€С‚Р°Р±Сѓ Рё СЃРјРµС‰РµРЅРёСЋ РґР»СЏ РѕС‚СЂРёСЃРѕРІРєРё РЅР° СЌРєСЂР°РЅРµ
 void Set_Poz(COORD poz)
 {
-	int zume = 20; //масштаб 
-	int smesh = 100; //смещение 
+	int zume = 20; //РјР°СЃС€С‚Р°Р± 
+	int smesh = 100; //СЃРјРµС‰РµРЅРёРµ 
 	tr = poz;
 	tr.X = smesh + (tr.X*zume);
 	tr.Y = smesh + (tr.Y*zume);
 }
-//true если в выбранном направлении от позиции игрока(pozPL)
+//true РµСЃР»Рё РІ РІС‹Р±СЂР°РЅРЅРѕРј РЅР°РїСЂР°РІР»РµРЅРёРё РѕС‚ РїРѕР·РёС†РёРё РёРіСЂРѕРєР°(pozPL)
 bool proverka(direction direct)
 {
 	switch (direct)
@@ -535,7 +542,7 @@ bool proverka(direction direct)
 		break;
 	}
 }
-//нарисовать всю карту 
+//РЅР°СЂРёСЃРѕРІР°С‚СЊ РІСЃСЋ РєР°СЂС‚Сѓ 
 void DrawAllCurrentLevel()
 {
 	int i, j;
@@ -546,22 +553,22 @@ void DrawAllCurrentLevel()
 		{
 			ij.X = i;
 			ij.Y = j;
-			if(Levels[current_level][j][i] == 1)
+			if (Levels[current_level][j][i] == 1)
 			{
 				Set_Poz(ij);
-				rect(tr, rasmer, gan, zal);
+				RectangleOnCOODR(tr, rasmer, rasmer, CL_RED, CL_YELLOW);
 			}
 		}
 	}
 }
-//возврящает 1 если достигнут финиш
-// и 0 если еще не финиш
-bool butgame(char key) 
+//РІРѕР·РІСЂСЏС‰Р°РµС‚ 1 РµСЃР»Рё РґРѕСЃС‚РёРіРЅСѓС‚ С„РёРЅРёС€
+// Рё 0 РµСЃР»Рё РµС‰Рµ РЅРµ С„РёРЅРёС€
+bool butgame(char key)
 {
-	RGB emp = { 255,255,255 }; // черный цвет для закраски "следа" за игрком
-	direction direct = Up; // под направления 1-вверх 2-вниз 3-лево 4- право 
+	RGB emp = { 255,255,255 }; // С‡РµСЂРЅС‹Р№ С†РІРµС‚ РґР»СЏ Р·Р°РєСЂР°СЃРєРё "СЃР»РµРґР°" Р·Р° РёРіСЂРєРѕРј
+	direction direct = Up; // РїРѕРґ РЅР°РїСЂР°РІР»РµРЅРёСЏ 1-РІРІРµСЂС… 2-РІРЅРёР· 3-Р»РµРІРѕ 4- РїСЂР°РІРѕ 
 	Set_Poz(pozPL);
-	elps(tr, razPL, gan, zal);
+	ElipseOnCOORD(tr, razPL, razPL, CL_RED, CL_YELLOW);
 	switch (key)
 	{
 	case 38: //up
@@ -570,15 +577,15 @@ bool butgame(char key)
 		{
 			Set_Poz(pozPL);
 			tr.Y -= Zume;
-			rect(tr, rasmer, gan, zal);
+			RectangleOnCOODR(tr, rasmer, rasmer, CL_RED, CL_YELLOW);
 		}
 		else
 		{
 			Set_Poz(pozPL);
-			rect(tr, rasmer, emp, emp);
+			RectangleOnCOODR(tr, rasmer, rasmer, CL_WHITE, CL_WHITE);
 			pozPL.Y--;
 			Set_Poz(pozPL);
-			elps(tr, razPL, gan, zal);
+			ElipseOnCOORD(tr, razPL, razPL, CL_RED, CL_YELLOW);
 		}
 		break;
 	case 40: //down
@@ -587,15 +594,15 @@ bool butgame(char key)
 		{
 			Set_Poz(pozPL);
 			tr.Y += Zume;
-			rect(tr, rasmer, gan, zal);
+			RectangleOnCOODR(tr, rasmer, rasmer, CL_RED, CL_YELLOW);
 		}
 		else
 		{
 			Set_Poz(pozPL);
-			rect(tr, rasmer, emp, emp);
+			RectangleOnCOODR(tr, rasmer, rasmer, CL_WHITE, CL_WHITE);
 			pozPL.Y++;
 			Set_Poz(pozPL);
-			elps(tr, razPL, gan, zal);
+			ElipseOnCOORD(tr, razPL, razPL, CL_RED, CL_YELLOW);
 		}
 		break;
 	case 37: //left
@@ -604,15 +611,15 @@ bool butgame(char key)
 		{
 			Set_Poz(pozPL);
 			tr.X -= Zume;
-			rect(tr, rasmer, gan, zal);
+			RectangleOnCOODR(tr, rasmer, rasmer, CL_RED, CL_YELLOW);
 		}
 		else
 		{
 			Set_Poz(pozPL);
-			rect(tr, rasmer, emp, emp);
+			RectangleOnCOODR(tr, rasmer, rasmer, CL_WHITE, CL_WHITE);
 			pozPL.X--;
 			Set_Poz(pozPL);
-			elps(tr, razPL, gan, zal);
+			ElipseOnCOORD(tr, razPL, razPL, CL_RED, CL_YELLOW);
 		}
 		break;
 	case 39: //right;
@@ -621,22 +628,22 @@ bool butgame(char key)
 		{
 			Set_Poz(pozPL);
 			tr.X += Zume;
-			rect(tr, rasmer, gan, zal);
+			RectangleOnCOODR(tr, rasmer, rasmer, CL_RED, CL_YELLOW);
 		}
 		else
 		{
 			Set_Poz(pozPL);
-			rect(tr, rasmer, emp, emp);
+			RectangleOnCOODR(tr, rasmer, rasmer, CL_WHITE, CL_WHITE);
 			pozPL.X++;
 			Set_Poz(pozPL);
-			elps(tr, razPL, gan, zal);
+			ElipseOnCOORD(tr, razPL, razPL, CL_RED, CL_YELLOW);
 		}
 		break;
 	case 13: DrawAllCurrentLevel(); break; //enter
 	}
-	if (sravn(pozPL, finish)) // проверка на финиширование
+	if (sravn(pozPL, finish)) // РїСЂРѕРІРµСЂРєР° РЅР° С„РёРЅРёС€РёСЂРѕРІР°РЅРёРµ
 	{
-		if(MessageBoxW(hwnd, TEXT("YOU WIN\nОК выйти в меню, CANCEL - остаться"), TEXT("YOU WIN"), MB_OKCANCEL)==1) // если нажмет ОК выйти в меню, CANCEL - остаться
+		if (MessageBoxW(hwnd, TEXT("YOU WIN\nРћРљ РІС‹Р№С‚Рё РІ РјРµРЅСЋ, CANCEL - РѕСЃС‚Р°С‚СЊСЃСЏ"), TEXT("YOU WIN"), MB_OKCANCEL) == 1) // РµСЃР»Рё РЅР°Р¶РјРµС‚ РћРљ РІС‹Р№С‚Рё РІ РјРµРЅСЋ, CANCEL - РѕСЃС‚Р°С‚СЊСЃСЏ
 			return 1;
 	}
 	return 0;
@@ -646,18 +653,18 @@ void DrowGame()
 {
 	/*std::thread BackGround(PlayMusic, BackGroungMusicGame);
 	BackGround.detach();*/
-	RGB fin = { 139, 0, 255 }, strt = { 211, 31, 94 }; //цвета заливки для старта и финиша
+	RGB fin = { 139, 0, 255 }, strt = { 211, 31, 94 }; //С†РІРµС‚Р° Р·Р°Р»РёРІРєРё РґР»СЏ СЃС‚Р°СЂС‚Р° Рё С„РёРЅРёС€Р°
 	Set_Poz(start);
-	rect(tr, rasmer, gan, strt);
+	RectangleOnCOODR(tr, rasmer, rasmer, CL_RED, CL_YELLOW);
 	Set_Poz(finish);
-	rect(tr, rasmer, gan, fin);
+	RectangleOnCOODR(tr, rasmer, rasmer, CL_BLUE, CL_BLUE);
 	Set_Poz(pozPL);
-	elps(tr, razPL, gan, zal);
+	ElipseOnCOORD(tr, razPL, razPL, CL_BLACK, CL_YELLOW);
 }
-/*функция отрисовки меню, по кол-ву punkt, enable - выделенный пункт меню, 
-gran - граница пунктов, zalivka - заливка кнопки, 
-далее массивы char для заполнения пунктов меню*/
-void menu(int punkt, int enable, RGB gran, RGB zalivka, ...)
+/*С„СѓРЅРєС†РёСЏ РѕС‚СЂРёСЃРѕРІРєРё РјРµРЅСЋ, РїРѕ РєРѕР»-РІСѓ punkt, enable - РІС‹РґРµР»РµРЅРЅС‹Р№ РїСѓРЅРєС‚ РјРµРЅСЋ,
+gran - РіСЂР°РЅРёС†Р° РїСѓРЅРєС‚РѕРІ, zalivka - Р·Р°Р»РёРІРєР° РєРЅРѕРїРєРё,
+РґР°Р»РµРµ РјР°СЃСЃРёРІС‹ char РґР»СЏ Р·Р°РїРѕР»РЅРµРЅРёСЏ РїСѓРЅРєС‚РѕРІ РјРµРЅСЋ*/
+void menu(int punkt, int enable, RGB foreground, RGB background, ...)
 {
 	ClearWindow();
 	va_list argp;
@@ -670,11 +677,11 @@ void menu(int punkt, int enable, RGB gran, RGB zalivka, ...)
 	text.left = text.right + 215;
 	text.bottom = text.top + 50;
 	SetBkMode(hdc, TRANSPARENT);
-	va_start(argp, zalivka);
+	va_start(argp, background);
 	for (i = 1; i <= punkt; i++)
 	{
-		if (i == enable) rect(Pbottun, EnableGran, EnableZalivka);
-		else rect(Pbottun, gran, zalivka);
+		if (i == enable) RectangleOnRECT(Pbottun, EnableGran, EnableZalivka);
+		else RectangleOnRECT(Pbottun, foreground, background);
 		p = va_arg(argp, char*);
 		DrawTextA(hdc, p, -1, &text, DT_CENTER);
 		Pbottun.top = text.top = text.bottom = Pbottun.bottom + 20;
@@ -684,41 +691,41 @@ void menu(int punkt, int enable, RGB gran, RGB zalivka, ...)
 	}
 	va_end(argp);
 }
-//Вызов Отрисовки меню
+//Р’С‹Р·РѕРІ РћС‚СЂРёСЃРѕРІРєРё РјРµРЅСЋ
 void DrawMenu(int poz)
 {
 	switch (NumOfMenu)
 	{
-	case 1: menu(PunctOf1Menu, poz, gan, zal, "Играть", "Об игре", "Выбор сложности", "Рекорды", "Выход"); break;
-	case 2: menu(PunctOf2Menu, poz, gan, zal, "Легко", "Нормально", "Сложно", "Назад"); break;
+	case 1: menu(PunctOf1Menu, poz, CL_RED, CL_YELLOW, "РРіСЂР°С‚СЊ", "РћР± РёРіСЂРµ", "Р’С‹Р±РѕСЂ СЃР»РѕР¶РЅРѕСЃС‚Рё", "Р РµРєРѕСЂРґС‹", "Р’С‹С…РѕРґ"); break;
+	case 2: menu(PunctOf2Menu, poz, CL_RED, CL_YELLOW, "Р›РµРіРєРѕ", "РќРѕСЂРјР°Р»СЊРЅРѕ", "РЎР»РѕР¶РЅРѕ", "РќР°Р·Р°Рґ"); break;
 	default:
 		break;
 	}
 }
-//обработка позиции меню
+//РѕР±СЂР°Р±РѕС‚РєР° РїРѕР·РёС†РёРё РјРµРЅСЋ
 void nummenu(int *poz)
 {
 	std::thread Music(PlayMusic, ChoicePointOfMenu);
 	Music.detach();
 	switch (NumOfMenu)
 	{
-	case 1: //главное меню
+	case 1: //РіР»Р°РІРЅРѕРµ РјРµРЅСЋ
 	{
-		switch (*poz) //смотрим на какой позиции в этом меню
+		switch (*poz) //СЃРјРѕС‚СЂРёРј РЅР° РєР°РєРѕР№ РїРѕР·РёС†РёРё РІ СЌС‚РѕРј РјРµРЅСЋ
 		{
-		case 1:*poz = 1; DrowGame(); ClearWindow(); status = Game; GenerateLocation(); break; //выполняем то что было на первом пункте и так далее
-		case 2:*poz = 1; WriteTextSymbolBySymbol({ 0,65,350,0 }, "Привет!*я смотрю ты заинтересовался игрой?*забавно)*А ведь я ее пилил чисто по приколу, лишь бы набраться опыта работы с WinApi*Но как не крути я забил на разработку примерно 5 месяцев и напроч забыл чему научился XD*В общем создал ее Дивольд Евгений Владимирович (bog5651)*Примерно 10.11.2017*Удачи!"); break;
+		case 1:*poz = 1; DrowGame(); ClearWindow(); status = Game; GenerateLocation(); break; //РІС‹РїРѕР»РЅСЏРµРј С‚Рѕ С‡С‚Рѕ Р±С‹Р»Рѕ РЅР° РїРµСЂРІРѕРј РїСѓРЅРєС‚Рµ Рё С‚Р°Рє РґР°Р»РµРµ
+		case 2:*poz = 1; /*WriteTextSymbolBySymbol({ 0,65,350,0 }, "РџСЂРёРІРµС‚!*СЏ СЃРјРѕС‚СЂСЋ С‚С‹ Р·Р°РёРЅС‚РµСЂРµСЃРѕРІР°Р»СЃСЏ РёРіСЂРѕР№?*Р·Р°Р±Р°РІРЅРѕ)*Рђ РІРµРґСЊ СЏ РµРµ РїРёР»РёР» С‡РёСЃС‚Рѕ РїРѕ РїСЂРёРєРѕР»Сѓ, Р»РёС€СЊ Р±С‹ РЅР°Р±СЂР°С‚СЊСЃСЏ РѕРїС‹С‚Р° СЂР°Р±РѕС‚С‹ СЃ WinApi*РќРѕ РєР°Рє РЅРµ РєСЂСѓС‚Рё СЏ Р·Р°Р±РёР» РЅР° СЂР°Р·СЂР°Р±РѕС‚РєСѓ РїСЂРёРјРµСЂРЅРѕ 5 РјРµСЃСЏС†РµРІ Рё РЅР°РїСЂРѕС‡ Р·Р°Р±С‹Р» С‡РµРјСѓ РЅР°СѓС‡РёР»СЃСЏ XD*Р’ РѕР±С‰РµРј СЃРѕР·РґР°Р» РµРµ Р”РёРІРѕР»СЊРґ Р•РІРіРµРЅРёР№ Р’Р»Р°РґРёРјРёСЂРѕРІРёС‡ (bog5651)*РџСЂРёРјРµСЂРЅРѕ 10.11.2017*РЈРґР°С‡Рё!");*/ break;
 		case 3:*poz = 1; NumOfMenu = 2; break;
 		case 4:*poz = 1; break;
-		case 5:*poz = 1; exit(NULL); break;//выход из программы(совсем)
+		case 5:*poz = 1; exit(NULL); break;//РІС‹С…РѕРґ РёР· РїСЂРѕРіСЂР°РјРјС‹(СЃРѕРІСЃРµРј)
 		default: *poz = 1; break;
 		}
 	} break;
-	case 2: //меню выбора сложности
+	case 2: //РјРµРЅСЋ РІС‹Р±РѕСЂР° СЃР»РѕР¶РЅРѕСЃС‚Рё
 	{
-		switch (*poz) //смотрим на какой позиции в этом меню
+		switch (*poz) //СЃРјРѕС‚СЂРёРј РЅР° РєР°РєРѕР№ РїРѕР·РёС†РёРё РІ СЌС‚РѕРј РјРµРЅСЋ
 		{
-		case 1:*poz = 1; current_level = 0; GenerateLocation(); break; //выполняем то что было на первом пункте и так далее
+		case 1:*poz = 1; current_level = 0; GenerateLocation(); break; //РІС‹РїРѕР»РЅСЏРµРј С‚Рѕ С‡С‚Рѕ Р±С‹Р»Рѕ РЅР° РїРµСЂРІРѕРј РїСѓРЅРєС‚Рµ Рё С‚Р°Рє РґР°Р»РµРµ
 		case 2:*poz = 1; current_level = 1; GenerateLocation(); break;
 		case 3:*poz = 1; current_level = 2; GenerateLocation(); break;
 		case 4:*poz = 1; NumOfMenu = 1; break;
@@ -729,7 +736,7 @@ void nummenu(int *poz)
 		break;
 	}
 }
-//обработка клавиш в меню и изменение пункта меню
+//РѕР±СЂР°Р±РѕС‚РєР° РєР»Р°РІРёС€ РІ РјРµРЅСЋ Рё РёР·РјРµРЅРµРЅРёРµ РїСѓРЅРєС‚Р° РјРµРЅСЋ
 void butMenu(char key, int punkts, int* poz)
 {
 	switch (key)
@@ -748,7 +755,7 @@ void butMenu(char key, int punkts, int* poz)
 		}
 		else *poz = *poz + 1;
 		break;
-	case 37: break; //left wtf зачем я их сюда дописал? TODO прикрутить на них что-либо
+	case 37: break; //left wtf Р·Р°С‡РµРј СЏ РёС… СЃСЋРґР° РґРѕРїРёСЃР°Р»? TODO РїСЂРёРєСЂСѓС‚РёС‚СЊ РЅР° РЅРёС… С‡С‚Рѕ-Р»РёР±Рѕ
 	case 39: break; //right;
 	case 13: nummenu(&*poz); break; //enter
 	}
@@ -756,7 +763,7 @@ void butMenu(char key, int punkts, int* poz)
 
 LRESULT WINAPI mainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	//обрабатка сообщений.
+	//РѕР±СЂР°Р±Р°С‚РєР° СЃРѕРѕР±С‰РµРЅРёР№.
 	switch (message)
 	{
 	case WM_PAINT:
@@ -764,17 +771,17 @@ LRESULT WINAPI mainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (status)
 		{
 		case Menu:
-			{
-				DrawMenu(poz);
-			}break;
+		{
+			DrawMenu(poz);
+		}break;
 		case Game:
-			{
-				DrowGame();
-			}break;
+		{
+			DrowGame();
+		}break;
 		default:
 			break;
 		}
-	} 
+	}
 	break;
 	case WM_KEYUP:
 	{
@@ -807,7 +814,7 @@ LRESULT WINAPI mainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_CLOSE:
 	{
 		PostQuitMessage(0);
-	} 
+	}
 	break;
 	}
 	return 0;
